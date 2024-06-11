@@ -17,7 +17,10 @@ section .text
     %endmacro
 
     _start:
-        PRNT mdg, lenmsg
+        PRNT msg, lenmsg
+        MOV DWORD [secondmsg], 'test'
+        MOV BYTE [secondsize], 4
+        PRNT secondmsg, secondsize
         CALL ENDGAME
 
     ENDGAME:                    ; end the program
@@ -30,3 +33,5 @@ section .data
 
 
 section .bss
+    secondmsg RESB 4
+    secondsize RESB 1
