@@ -32,20 +32,27 @@ section .text
         PRNT aPawn, 1
         JMP SPACE
 
+    BPAWN:
+        PRNT bPawn, 1
+        JMP SPACE
+
     NOPAWN:
         PRNT noPawn, 1
         JMP SPACE
 
-    SHOW_CARACTER:                  ; with in "line" the line to show
+    SHOW_CARACTER:
         MOV cl, [caracterIndex]
         SUB cl, 1                   ; substract 1 bcs ebx has a 1 in pre-last pos
-        MOV bl, 1
-        SHL bl, cl
-        MOV al, [line]
-        AND al, bl
-        CMP al, 0
+        MOV bx, 0x0101
+        SHL bx, cl
+        MOV ah, [lineA]
+        MOV al, [lineB]
+        AND ax, bx
+        CMP ax, 0
         JE NOPAWN
-        JMP APAWN
+        CMP ax, 0x0100
+        JGE APAWN
+        JMP BPAWN
 
     NEXT_CHARACTER:
         MOV cl, [caracterIndex]
@@ -60,7 +67,11 @@ section .text
         MOV esi, gridA
         ADD esi, ecx
         MOV BYTE bl, [esi]
-        MOV BYTE [line], bl
+        MOV BYTE [lineA], bl
+        MOV esi, gridB
+        ADD esi, ecx
+        MOV BYTE bl, [esi]
+        MOV BYTE [lineB], bl
         MOV BYTE [caracterIndex], 7
         JMP SHOW_CARACTER
 
@@ -87,7 +98,9 @@ section .text
 
 section .data
     gridA TIMES 6 DB 0b0001100 ; 1st bit will be unused
+    gridB TIMES 6 DB 0b0101100 ; 1st bit will be unused
     aPawn DB 'O'                ; length of 1
+    bPawn DB 'X'                ; length of 1
     noPawn DB '*'               ; length of 1
     spaces DB '  '              ; length of 2
     toLine DB 0x0A              ; length of 1
@@ -96,7 +109,8 @@ section .data
 
 
 section .bss
-    line RESB 1
+    lineA RESB 1
+    lineB RESB 1
     caracterIndex RESB 1
     lineIndex RESB 1
     tmp RESB 1
