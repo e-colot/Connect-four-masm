@@ -49,16 +49,17 @@ section .text
         MOV [lineIndex], ecx
         CMP ecx, 0
         JNZ SHOW_LINE
-        JMP END_GAME
+        JMP NEXT_LINE
 
     NEXT_LINE:
         CALL TOLINE
+        RET
 
     _start:
         PRNT msg, lenmsg
         MOV BYTE [lineIndex], 7  ; 8 elements in a line
         MOV BYTE [line], 0b1001000
-        JMP SHOW_LINE
+        CALL SHOW_LINE
         JMP END_GAME
 
     END_GAME:                    ; end the program
