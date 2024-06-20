@@ -63,7 +63,7 @@ STDOUT      EQU 1
 
 %macro CHECK_FOR_WIN 0
     CALL H_WIN
-
+    CALL V_WIN
 %endmacro
 
 ; ----------------------------- CODE ---------------------------------
@@ -79,6 +79,18 @@ section .text
         INC cl
         CMP cl, 7
         JNE COUNT_1
+        RET
+
+    FOR_EACH_LINE:
+        MOV BYTE dl, [esi]
+        SHR dl, cl
+        AND dl, 0x1
+        ADD al, dl
+        SHL al, 1
+        INC esi
+        INC bl
+        CMP bl, 6
+        JNE FOR_EACH_LINE
         RET
 
     H_WIN:                      ; checks for - win
@@ -103,6 +115,24 @@ section .text
         RET
 
     V_WIN:                      ; checks for | win
+        MOV al, 0x1
+        MOV BYTE cl, 6
+        SUB cl, [rowPos]
+        MOV esi, [actualPlayerGrid]
+        MOV bl, 0               ; used as a counter for the number of lines
+        CALL FOR_EACH_LINE
+        MOV [tmp1], al
+        NBR_COMMON_BITS tmp1, 0b111100
+        CMP dl, 4
+        JE WIN
+        NBR_COMMON_BITS tmp1, 0b011110
+        CMP dl, 4
+        JE WIN
+        NBR_COMMON_BITS tmp1, 0b001111
+        CMP dl, 4
+        JE WIN
+        RET
+
     SLANT1_WIN:                 ; checks for / win
     SLANT2_WIN:                 ; checks for \ win
 
