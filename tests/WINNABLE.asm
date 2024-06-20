@@ -4,6 +4,7 @@ SYS_WRITE   EQU 4
 STDIN       EQU 2
 STDOUT      EQU 1
 
+; ---------------------------- MACROS --------------------------------
 
 %macro PRNT 2               ; prints arg1 of length arg2
     MOV eax, SYS_WRITE
@@ -65,6 +66,7 @@ STDOUT      EQU 1
 
 %endmacro
 
+; ----------------------------- CODE ---------------------------------
 
 section .text
     global _start               ; to use gcc
@@ -78,30 +80,6 @@ section .text
         CMP cl, 7
         JNE COUNT_1
         RET
-
-    CHECK_GRID:
-        MOV bl, [rowPos]
-        MOV cl, 6
-        SUB cl, bl
-        MOV bx, 0x0101
-        SHL bx, cl            ; mask
-        MOV esi, gridA
-        AND edx, 0
-        MOV dl, [linePos]
-        ADD esi, edx
-        MOV BYTE ah, [esi]
-        MOV esi, gridB
-        ADD esi, edx
-        MOV BYTE al, [esi]
-        AND ax, bx
-        CMP ax, 0
-        JE ADD_TO_GRID
-        MOV al, [linePos]
-        DEC al
-        MOV [linePos], al
-        CMP al, 0xFF            ; if underflow (so if linePos == -1)
-        JNZ CHECK_GRID
-        JMP INVALID_MOVE
 
     H_WIN:                      ; checks for - win
         AND ebx, 0x0
@@ -131,6 +109,34 @@ section .text
     WIN:
         PRNT msg, lenmsg
         JMP END_GAME
+
+
+
+; --------------------------- PLAYING --------------------------------
+
+    CHECK_GRID:
+        MOV bl, [rowPos]
+        MOV cl, 6
+        SUB cl, bl
+        MOV bx, 0x0101
+        SHL bx, cl            ; mask
+        MOV esi, gridA
+        AND edx, 0
+        MOV dl, [linePos]
+        ADD esi, edx
+        MOV BYTE ah, [esi]
+        MOV esi, gridB
+        ADD esi, edx
+        MOV BYTE al, [esi]
+        AND ax, bx
+        CMP ax, 0
+        JE ADD_TO_GRID
+        MOV al, [linePos]
+        DEC al
+        MOV [linePos], al
+        CMP al, 0xFF            ; if underflow (so if linePos == -1)
+        JNZ CHECK_GRID
+        JMP INVALID_MOVE
 
     ADD_TO_GRID:
         MOV esi, [actualPlayerGrid]
@@ -236,8 +242,8 @@ section .text
         CMP cl, 6
         JNZ SHOW_LINE
         RET
-
-; ------------------------- START & END -------------------------
+        
+; ------------------------- START & END ------------------------------
 
     END_GAME:                    ; end the program
         MOV eax, SYS_EXIT
@@ -248,8 +254,8 @@ section .text
         CALL SHOW_GRID
         ATURN
         JMP END_GAME
-
-; -------------------------- VARIABLES --------------------------
+        
+; -------------------------- VARIABLES -------------------------------
 
 section .data
     gridA TIMES 6 DB 0b0000000 ; 1st bit will be unused
