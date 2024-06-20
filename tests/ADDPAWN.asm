@@ -20,7 +20,12 @@ STDOUT      EQU 1
     MOV edx, 2
     int 0x80
     MOV al, [tmp]
+    CMP al, 'q'
+    JE END_GAME
     SUB al, '1'
+    JS INVALID_MOVE         ; if last operation changed the sign (input < '1' in ASCII)
+    CMP al, 6
+    JG INVALID_MOVE         ; if input > '7' in ASCII
     MOV [tmp], al
 %endmacro
 
