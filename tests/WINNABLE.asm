@@ -64,12 +64,16 @@ STDOUT      EQU 1
 %macro CHECK_FOR_WIN 0
     CALL H_WIN
     CALL V_WIN
+    CALL SLANT1_WIN
 %endmacro
 
 ; ----------------------------- CODE ---------------------------------
 
 section .text
     global _start               ; to use gcc
+
+    RETURN:
+        RET
 
     COUNT_1:                    ; with the total in dl, the count in cl and the byte in al
         MOV bl, al              ; using bl to not remove the byte from al
@@ -134,13 +138,52 @@ section .text
         RET
 
     SLANT1_WIN:                 ; checks for / win
+        MOV bl, [linePos]
+        MOV bh, [rowPos]
+        MOV BYTE cl, 5               ; 5 and not 6 bcs cl is increased at FOR_SLANT1 before any operation
+        SUB cl, bl
+        SUB cl, bh              ; cl is the shift (minus 1)
+        MOV esi, [actualPlayerGrid]
+        DEC esi
+        MOV BYTE ah, -1              ; iteration counter
+        AND dl, 0x0             ; result registers initalization
+        CALL FOR_SLANT1
+        MOV [tmp1], dl
+        NBR_COMMON_BITS tmp1, 0b111100
+        CMP dl, 4
+        JE WIN
+        NBR_COMMON_BITS tmp1, 0b011110
+        CMP dl, 4
+        JE WIN
+        NBR_COMMON_BITS tmp1, 0b001111
+        CMP dl, 4
+        JE WIN
+        RET
+
+    FOR_SLANT1:
+        INC esi
+        INC ah
+        INC cl
+        CMP cl, 0
+        JL FOR_SLANT1
+        MOV BYTE al, [esi]
+        SHR al, cl
+        AND al, 1
+        ADD dl, al
+        SHL dl, 1
+        CMP cl, 6
+        JE RETURN
+        CMP ah, 5
+        JE RETURN
+        JMP FOR_SLANT1
+
     SLANT2_WIN:                 ; checks for \ win
+
+    BOTTOM_OF_GRID1:
 
     WIN:
         PRNT msg, lenmsg
         JMP END_GAME
-
-
 
 ; --------------------------- PLAYING --------------------------------
 
@@ -288,8 +331,8 @@ section .text
 ; -------------------------- VARIABLES -------------------------------
 
 section .data
-    gridA TIMES 6 DB 0b0000000 ; 1st bit will be unused
-    gridB TIMES 6 DB 0b0000000 ; 1st bit will be unused
+    gridA DB 0b00000000, 0b00000000, 0b00000000, 0b00010000, 0b00110000, 0b01110000
+    gridB DB 0b00000000, 0b00000000, 0b00000000, 0b00001000, 0b00001000, 0b00001000
     aPawn DB 'O'                ; length of 1
     bPawn DB 'X'                ; length of 1
     noPawn DB '*'               ; length of 1
