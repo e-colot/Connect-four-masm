@@ -6,7 +6,7 @@ STDOUT      EQU 1
 
 ; ---------------------------- MACROS --------------------------------
 
-%macro PRNT 2               ; prints arg1 of length arg2
+%macro PRNT 2                                ; prints arg1 of length arg2
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT
     MOV ecx, %1
@@ -17,17 +17,17 @@ STDOUT      EQU 1
 %macro INPUT 0
     MOV eax, SYS_READ
     MOV ebx, STDIN
-    MOV ecx, tmp
+    MOV ecx, inputBuffer
     MOV edx, 2
     int 0x80
-    MOV al, [tmp]
+    MOV al, [inputBuffer]
     CMP al, 'q'
     JE END_GAME
     SUB al, '1'
-    JS INVALID_MOVE         ; if last operation changed the sign (input < '1' in ASCII)
+    JS INVALID_MOVE                          ; if last operation changed the sign (input < '1' in ASCII)
     CMP al, 6
-    JG INVALID_MOVE         ; if input > '7' in ASCII
-    MOV [tmp], al
+    JG INVALID_MOVE                          ; if input > '7' in ASCII
+    MOV [inputBuffer], al
 %endmacro
 
 %macro ATURN 0
@@ -35,9 +35,9 @@ STDOUT      EQU 1
     MOV [actualPlayerGrid], esi
     PRNT inputmsg, leninputmsg
     INPUT
-    MOV al, [tmp]
-    MOV [rowPos], al               ; rowPos used to store the row
-    MOV BYTE [linePos], 5          ; linePos used to store the line at which we are trying to add a pawn
+    MOV al, [inputBuffer]
+    MOV [rowPos], al                         ; rowPos used to store the row
+    MOV BYTE [linePos], 5                    ; linePos used to store the line at which we are trying to add a pawn
     JMP CHECK_GRID
 %endmacro
 
@@ -46,13 +46,13 @@ STDOUT      EQU 1
     MOV [actualPlayerGrid], esi
     PRNT inputmsg, leninputmsg
     INPUT
-    MOV al, [tmp]
-    MOV [rowPos], al               ; rowPos used to store the row
-    MOV BYTE [linePos], 5          ; linePos used to store the line at which we are trying to add a pawn
+    MOV al, [inputBuffer]
+    MOV [rowPos], al                         ; rowPos used to store the row
+    MOV BYTE [linePos], 5                    ; linePos used to store the line at which we are trying to add a pawn
     JMP CHECK_GRID
 %endmacro
 
-%macro NBR_COMMON_BITS 2        ; output in dl
+%macro NBR_COMMON_BITS 2                     ; output in dl
     MOV al, [%1]
     MOV bl, %2
     AND al, bl
@@ -71,13 +71,13 @@ STDOUT      EQU 1
 ; ----------------------------- CODE ---------------------------------
 
 section .text
-    global _start               ; to use gcc
+    global _start                            ; to use gcc
 
     RETURN:
         RET
 
-    COUNT_1:                    ; with the total in dl, the count in cl and the byte in al
-        MOV bl, al              ; using bl to not remove the byte from al
+    COUNT_1:                                 ; with the total in dl, the count in cl and the byte in al
+        MOV bl, al                           ; using bl to not remove the byte from al
         SHR bl, cl
         AND bl, 0x1
         ADD dl, bl
@@ -98,7 +98,7 @@ section .text
         JNE FOR_EACH_LINE
         RET
 
-    H_WIN:                      ; checks for - win
+    H_WIN:                                   ; checks for - win
         AND ebx, 0x0
         MOV bl, [linePos]
         MOV esi, [actualPlayerGrid]
@@ -107,26 +107,26 @@ section .text
         MOV [tmp1], al
         JMP END_CHECK
 
-    V_WIN:                      ; checks for | win
+    V_WIN:                                   ; checks for | win
         MOV al, 0x1
         MOV BYTE cl, 6
         SUB cl, [rowPos]
         MOV esi, [actualPlayerGrid]
-        MOV bl, 0               ; used as a counter for the number of lines
+        MOV bl, 0                            ; used as a counter for the number of lines
         CALL FOR_EACH_LINE
         MOV [tmp1], al
         JMP END_CHECK
 
-    SLANT1_WIN:                 ; checks for / win
+    SLANT1_WIN:                              ; checks for / win
         MOV bl, [linePos]
         MOV bh, [rowPos]
-        MOV BYTE cl, 5               ; 5 and not 6 bcs cl is increased at FOR_SLANT1 before any operation
+        MOV BYTE cl, 5                       ; 5 and not 6 bcs cl is increased at FOR_SLANT1 before any operation
         SUB cl, bl
-        SUB cl, bh              ; cl is the shift (minus 1)
+        SUB cl, bh                           ; cl is the shift (minus 1)
         MOV esi, [actualPlayerGrid]
         DEC esi
-        MOV BYTE ah, -1              ; iteration counter
-        AND dl, 0x0             ; result registers initalization
+        MOV BYTE ah, -1                      ; iteration counter
+        AND dl, 0x0                          ; result registers initalization
         CALL FOR_SLANT1
         MOV [tmp1], dl
         JMP END_CHECK
@@ -148,16 +148,16 @@ section .text
         JE RETURN
         JMP FOR_SLANT1
 
-    SLANT2_WIN:                 ; checks for \ win
+    SLANT2_WIN:                              ; checks for \ win
         MOV bl, [linePos]
         MOV bh, [rowPos]
         MOV BYTE cl, 7          
         ADD cl, bl
-        SUB cl, bh              ; cl is the shift (plus 1)
+        SUB cl, bh                           ; cl is the shift (plus 1)
         MOV esi, [actualPlayerGrid]
         DEC esi
-        MOV BYTE ah, -1              ; iteration counter
-        AND dl, 0x0             ; result registers initalization
+        MOV BYTE ah, -1                      ; iteration counter
+        AND dl, 0x0                          ; result registers initalization
         CALL FOR_SLANT2
         MOV [tmp1], dl
         JMP END_CHECK
@@ -205,7 +205,7 @@ section .text
         MOV cl, 6
         SUB cl, bl
         MOV bx, 0x0101
-        SHL bx, cl            ; mask
+        SHL bx, cl                           ; mask
         MOV esi, gridA
         AND edx, 0
         MOV dl, [linePos]
@@ -215,13 +215,11 @@ section .text
         ADD esi, edx
         MOV BYTE al, [esi]
         AND ax, bx
-        CMP ax, 0
         JE ADD_TO_GRID
         MOV al, [linePos]
         DEC al
         MOV [linePos], al
-        CMP al, 0xFF            ; if underflow (so if linePos == -1)
-        JNZ CHECK_GRID
+        JS CHECK_GRID                        ; if linePos < 0
         JMP INVALID_MOVE
 
     ADD_TO_GRID:
@@ -287,9 +285,9 @@ section .text
 
     SHOW_CARACTER:
         MOV cl, [caracterIndex]
-        SUB cl, 1                   ; substract 1 bcs ebx has a 1 in pre-last pos
+        SUB cl, 1                            ; substract 1 bcs ebx has a 1 in pre-last pos
         MOV bx, 0x0101
-        SHL bx, cl                  ; mask
+        SHL bx, cl                           ; mask
         MOV ah, [lineA]
         MOV al, [lineB]
         AND ax, bx
@@ -308,7 +306,7 @@ section .text
         JMP NEXT_LINE
 
     SHOW_LINE:
-        MOVZX ecx, BYTE [lineIndex]        ; lineIndex on 1 byte so we have to extend zeros to "cover" the last data
+        MOVZX ecx, BYTE [lineIndex]          ; lineIndex on 1 byte so we have to extend zeros to "cover" the last data
         MOV esi, gridA
         ADD esi, ecx
         MOV BYTE bl, [esi]
@@ -331,7 +329,7 @@ section .text
         
 ; ------------------------- START & END ------------------------------
 
-    END_GAME:                    ; end the program
+    END_GAME:                                ; end the program
         MOV eax, SYS_EXIT
         int 0x80
 
@@ -346,11 +344,11 @@ section .text
 section .data
     gridA TIMES 6 DB 0b00000000
     gridB TIMES 6 DB 0b00000000
-    aPawn DB 'O'                ; length of 1
-    bPawn DB 'X'                ; length of 1
-    noPawn DB '*'               ; length of 1
-    spaces DB '  '              ; length of 2
-    toLine DB 0x0A              ; length of 1
+    aPawn DB 'O'                             ; length of 1
+    bPawn DB 'X'                             ; length of 1
+    noPawn DB '*'                            ; length of 1
+    spaces DB '  '                           ; length of 2
+    toLine DB 0x0A                           ; length of 1
     startmsg DB 'start of the game', 0xA, 0xD
     lenstartmsg EQU $ - startmsg
     inputmsg DB 'Choose where to place your pawn', 0xA, 0xD
@@ -366,7 +364,7 @@ section .bss
     caracterIndex RESB 1
     lineIndex RESB 1
     tmp1 RESB 1
-    tmp RESB 2
+    inputBuffer RESB 2
     actualPlayerGrid RESD 1
     linePos RESB 1
     rowPos RESB 1
