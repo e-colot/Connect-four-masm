@@ -65,6 +65,7 @@ STDOUT      EQU 1
     CALL H_WIN
     CALL V_WIN
     CALL SLANT1_WIN
+    CALL SLANT2_WIN
 %endmacro
 
 ; ----------------------------- CODE ---------------------------------
@@ -104,19 +105,7 @@ section .text
         ADD esi, ebx
         MOV al, [esi]
         MOV [tmp1], al
-        NBR_COMMON_BITS tmp1, 0b1111000
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS tmp1, 0b0111100
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS tmp1, 0b0011110
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS tmp1, 0b0001111
-        CMP dl, 4
-        JE WIN
-        RET
+        JMP END_CHECK
 
     V_WIN:                      ; checks for | win
         MOV al, 0x1
@@ -126,16 +115,7 @@ section .text
         MOV bl, 0               ; used as a counter for the number of lines
         CALL FOR_EACH_LINE
         MOV [tmp1], al
-        NBR_COMMON_BITS tmp1, 0b111100
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS tmp1, 0b011110
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS tmp1, 0b001111
-        CMP dl, 4
-        JE WIN
-        RET
+        JMP END_CHECK
 
     SLANT1_WIN:                 ; checks for / win
         MOV bl, [linePos]
@@ -149,16 +129,7 @@ section .text
         AND dl, 0x0             ; result registers initalization
         CALL FOR_SLANT1
         MOV [tmp1], dl
-        NBR_COMMON_BITS tmp1, 0b111100
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS tmp1, 0b011110
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS tmp1, 0b001111
-        CMP dl, 4
-        JE WIN
-        RET
+        JMP END_CHECK
 
     FOR_SLANT1:
         INC esi
@@ -178,8 +149,50 @@ section .text
         JMP FOR_SLANT1
 
     SLANT2_WIN:                 ; checks for \ win
+        MOV bl, [linePos]
+        MOV bh, [rowPos]
+        MOV BYTE cl, 7          
+        ADD cl, bl
+        SUB cl, bh              ; cl is the shift (plus 1)
+        MOV esi, [actualPlayerGrid]
+        DEC esi
+        MOV BYTE ah, -1              ; iteration counter
+        AND dl, 0x0             ; result registers initalization
+        CALL FOR_SLANT2
+        MOV [tmp1], dl
+        JMP END_CHECK
 
-    BOTTOM_OF_GRID1:
+    FOR_SLANT2:
+        INC esi
+        INC ah
+        DEC cl
+        CMP cl, 7
+        JG FOR_SLANT2
+        MOV BYTE al, [esi]
+        SHR al, cl
+        AND al, 1
+        ADD dl, al
+        SHL dl, 1
+        CMP cl, 0
+        JE RETURN
+        CMP ah, 5
+        JE RETURN
+        JMP FOR_SLANT2
+
+    END_CHECK:
+        NBR_COMMON_BITS tmp1, 0b1111000
+        CMP dl, 4
+        JE WIN
+        NBR_COMMON_BITS tmp1, 0b0111100
+        CMP dl, 4
+        JE WIN
+        NBR_COMMON_BITS tmp1, 0b0011110
+        CMP dl, 4
+        JE WIN
+        NBR_COMMON_BITS tmp1, 0b0001111
+        CMP dl, 4
+        JE WIN
+        RET
 
     WIN:
         PRNT msg, lenmsg
@@ -331,7 +344,7 @@ section .text
 ; -------------------------- VARIABLES -------------------------------
 
 section .data
-    gridA DB 0b00000000, 0b00000000, 0b00000000, 0b00010000, 0b00110000, 0b01110000
+    gridA DB 0b00000000, 0b00000000, 0b00000000, 0b00000100, 0b00000110, 0b00000111
     gridB DB 0b00000000, 0b00000000, 0b00000000, 0b00001000, 0b00001000, 0b00001000
     aPawn DB 'O'                ; length of 1
     bPawn DB 'X'                ; length of 1
