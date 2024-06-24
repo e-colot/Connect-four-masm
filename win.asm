@@ -12,7 +12,7 @@
 %endmacro
 
 section .bss
-    tmp1 RESB 1
+    lineBuffer RESB 1
 
 section .data
     endmsg DB 'End of the game', 0xA, 0xD, 0xA, 0xD
@@ -67,8 +67,8 @@ section .text
         MOV esi, [actualPlayerGrid]
         ADD esi, ebx
         MOV al, [esi]
-        MOV [tmp1], al
-;   0x804a078 <tmp1>:       01001110
+        MOV [lineBuffer], al
+;   0x804a078 <lineBuffer>:       01001110
 ;   Should be : 00001111 (or smth like it)
 ; for the grid :
 ;   *  *  *  *  *  *  *  
@@ -88,7 +88,7 @@ section .text
         MOV esi, [actualPlayerGrid]
         MOV bl, 0                            ; used as a counter for the number of lines
         CALL FOR_EACH_LINE
-        MOV [tmp1], al
+        MOV [lineBuffer], al
         JMP END_CHECK
 
     SLANT1_WIN:                              ; checks for / win
@@ -102,7 +102,7 @@ section .text
         MOV BYTE ah, -1                      ; iteration counter
         AND dl, 0x0                          ; result registers initalization
         CALL FOR_SLANT1
-        MOV [tmp1], dl
+        MOV [lineBuffer], dl
         JMP END_CHECK
 
     FOR_SLANT1:
@@ -133,7 +133,7 @@ section .text
         MOV BYTE ah, -1                      ; iteration counter
         AND dl, 0x0                          ; result registers initalization
         CALL FOR_SLANT2
-        MOV [tmp1], dl
+        MOV [lineBuffer], dl
         JMP END_CHECK
 
     FOR_SLANT2:
@@ -154,16 +154,16 @@ section .text
         JMP FOR_SLANT2
 
     END_CHECK:
-        NBR_COMMON_BITS tmp1, 0b1111000
+        NBR_COMMON_BITS lineBuffer, 0b1111000
         CMP dl, 4
         JE WIN
-        NBR_COMMON_BITS tmp1, 0b0111100
+        NBR_COMMON_BITS lineBuffer, 0b0111100
         CMP dl, 4
         JE WIN
-        NBR_COMMON_BITS tmp1, 0b0011110
+        NBR_COMMON_BITS lineBuffer, 0b0011110
         CMP dl, 4
         JE WIN
-        NBR_COMMON_BITS tmp1, 0b0001111
+        NBR_COMMON_BITS lineBuffer, 0b0001111
         CMP dl, 4
         JE WIN
         RET
