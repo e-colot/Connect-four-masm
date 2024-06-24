@@ -54,6 +54,8 @@ section .data
 section .text
 
     global LAUNCH_A_TURN
+    global linePos
+    global rowPos
 
     extern CHECK_FOR_WIN
     extern SHOW_GRID

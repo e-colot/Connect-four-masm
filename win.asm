@@ -13,8 +13,6 @@
 
 section .bss
     tmp1 RESB 1
-    linePos RESB 1
-    rowPos RESB 1
 
 section .data
     endmsg DB 'End of the game', 0xA, 0xD, 0xA, 0xD
@@ -28,6 +26,8 @@ section .text
     extern gridA
     extern gridB
     extern actualPlayerGrid
+    extern linePos
+    extern rowPos
 
     CHECK_FOR_WIN:
         CALL H_WIN

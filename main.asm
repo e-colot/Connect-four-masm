@@ -22,9 +22,6 @@ section .text
 
     _start:
         PRNT startmsg, lenstartmsg
-        MOV BYTE [gridA + 5], 0b01110000
-        MOV BYTE [gridA + 4], 0b01110000
-        MOV BYTE [gridA + 3], 0b01110000
         CALL SHOW_GRID
         JMP LAUNCH_A_TURN
 
