@@ -1,0 +1,10 @@
+the algorithm will try each move (1-7) for itself then for the opponent
+it needs a depth of at least 4
+it's called backtracking because it will stop in case of a loss and come back to the previous move
+
+the value of a move will be determined based on the number of win/loss scenarios
+(at least for the first version, as it is far from optimal with forced win for example)
+
+the opponent will always play the best move that he has
+in case of equal scenarios, the algorithm will choose randomly which one to play
+
