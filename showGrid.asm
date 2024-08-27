@@ -22,17 +22,10 @@ section .text
     extern gridA
     extern gridB
 
-    SHOW_GRID:
-        MOV BYTE [lineIndex], 0
-        JMP SHOW_LINE
-
     TOLINE:
+        ; this label could be deleted but it helps comprehension
         PRNT toLine, 1
         RET
-
-    SPACE:
-        PRNT spaces, 2
-        JMP NEXT_CHARACTER
 
     APAWN:
         PRNT aPawn, 1
@@ -46,40 +39,18 @@ section .text
         PRNT noPawn, 1
         JMP SPACE
 
-    SHOW_CARACTER:
-        MOV cl, [caracterIndex]
-        SUB cl, 1                            ; substract 1 bcs ebx has a 1 in pre-last pos
-        MOV bx, 0x0101
-        SHL bx, cl                           ; mask
-        MOV ah, [lineA]
-        MOV al, [lineB]
-        AND ax, bx
-        CMP ax, 0
-        JE NOPAWN
-        CMP ax, 0x0100
-        JGE APAWN
-        JMP BPAWN
+    SPACE:
+        PRNT spaces, 2
+        ; inconditionally going to NEXT_CHARACTER
 
     NEXT_CHARACTER:
         MOV cl, [caracterIndex]
         DEC cl
         MOV BYTE [caracterIndex], cl
-        CMP cl, 0
+        ; decreases caracterIndex so going to the next caracter
+        CMP cl, -1
         JNZ SHOW_CARACTER
-        JMP NEXT_LINE
-
-    SHOW_LINE:
-        MOVZX ecx, BYTE [lineIndex]          ; lineIndex on 1 byte so we have to extend zeros to "cover" the last data
-        MOV esi, gridA
-        ADD esi, ecx
-        MOV BYTE bl, [esi]
-        MOV BYTE [lineA], bl
-        MOV esi, gridB
-        ADD esi, ecx
-        MOV BYTE bl, [esi]
-        MOV BYTE [lineB], bl
-        MOV BYTE [caracterIndex], 7
-        JMP SHOW_CARACTER
+        ; if not SHOW_CHARACTER, going to NEXT_LINE
 
     NEXT_LINE:
         CALL TOLINE
@@ -88,5 +59,51 @@ section .text
         MOV [lineIndex], cl
         CMP cl, 6
         JNZ SHOW_LINE
+        ; if there is another line to show, show it
+        CALL TOLINE
+        ; adds a line after showing the grid
         RET
+
+    SHOW_GRID:
+        MOV BYTE [lineIndex], 0
+        ; start by showing the line 0
+        ; inconditionally going to SHOW_LINE
+
+    SHOW_LINE:
+        MOVZX ecx, BYTE [lineIndex]          
+        ; lineIndex on 1 byte so we have to extend zeros to fill ecx
+        ; ecx must be filled to then add it with esi (4 bytes)
+        MOV esi, gridA
+        ADD esi, ecx
+        ; esi is now pointing to the current line in gridA
+        MOV BYTE bl, [esi]
+        MOV BYTE [lineA], bl
+        ; the line is loaded in lineA (through bl)
+        MOV esi, gridB
+        ADD esi, ecx
+        MOV BYTE bl, [esi]
+        MOV BYTE [lineB], bl
+        ; the line of the opponent's grid is loaded in lineB
+        MOV BYTE [caracterIndex], 6
+        ; starting at the highest for the mask shifting to the left :
+        ;       0b01000000
+        ;       0b00100000
+        ;       ...
+        ; inconditionally going to SHOW_CARACTER
+
+; -------------------- caracterIndex, lineA, lineB on stack ??? ---------------------------------------------------
+
+    SHOW_CARACTER:
+        MOV cl, [caracterIndex]
+        MOV bx, 0x0101
+        SHL bx, cl                           
+        ; mask on both bl and bh to check for the 2 grids
+        MOV ah, [lineA]
+        MOV al, [lineB]
+        AND ax, bx
+        JZ NOPAWN
+        ; if the result of the AND is zero, no pawn is there
+        CMP ax, 0x0100
+        JGE APAWN
+        JMP BPAWN
 
