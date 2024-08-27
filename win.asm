@@ -27,41 +27,48 @@ section .text
     RETURN:
         RET
 
-    FOR_EACH_LINE:
-        MOV BYTE dl, [esi]
-        SHR dl, cl
-        AND dl, 0x1
-        ADD al, dl
-        SHL al, 1
-        INC esi
-        INC bl
-        CMP bl, 6
-        JNE FOR_EACH_LINE
-        RET
-
     H_WIN:                                   
     ; checks for - win
-        AND ebx, 0x0
+        AND ebx, 0
         MOV bl, [linePos]
         MOV esi, [actualPlayerGrid]
         ADD esi, ebx
-        MOV al, [esi]
-        MOV dl, al  ; could be changed after
+        ; esi now points to the row that has to be checked
+        MOV dl, [esi]
         JMP FIND4
 
     V_WIN:                                   
     ; checks for | win
-        MOV al, 0x1
+        MOV dl, 1
         MOV BYTE cl, 6
         MOV ch, [rowPos]
         SUB cl, ch
+        ; cl stores here the column that has to be checked
         MOV esi, [actualPlayerGrid]
         MOV bl, 0                            ; used as a counter for the number of lines
-        CALL FOR_EACH_LINE
-        MOV dl, al  ; could be changed after
+        JMP FOR_EACH_LINE
+
+    FOR_EACH_LINE:
+        MOV BYTE al, [esi]
+        SHR al, cl
+        ; puts the bit of interest at the right of al
+        AND al, 1
+        ADD dl, al
+
+        SHL dl, 1
+        ; shift to make place for the next bit
+        INC esi
+        ; points to the next line
+        INC bl
+
+        ; if the whole column has not been looked yet
+        CMP bl, 6
+        JNE FOR_EACH_LINE
+
         JMP FIND4
 
-    SLANT1_WIN:                              ; checks for / win
+    SLANT1_WIN:                              
+    ; checks for / win
         MOV bl, [linePos]
         MOV bh, [rowPos]
         MOV BYTE cl, 5                       ; 5 and not 6 bcs cl is increased at FOR_SLANT1 before any operation
