@@ -3,8 +3,6 @@
 %include "macros.inc"
 
 section .bss
-    lineA RESB 1
-    lineB RESB 1
     caracterIndex RESB 1
     lineIndex RESB 1
 
@@ -53,6 +51,8 @@ section .text
         ; if not SHOW_CHARACTER, going to NEXT_LINE
 
     NEXT_LINE:
+        POP ax
+        ; getting rid of the value of "complete line"
         CALL TOLINE
         MOV cl, [lineIndex]
         INC cl
@@ -76,14 +76,14 @@ section .text
         MOV esi, gridA
         ADD esi, ecx
         ; esi is now pointing to the current line in gridA
-        MOV BYTE bl, [esi]
-        MOV BYTE [lineA], bl
-        ; the line is loaded in lineA (through bl)
+        MOV BYTE ah, [esi]
+        ; the line is loaded in ah
         MOV esi, gridB
         ADD esi, ecx
-        MOV BYTE bl, [esi]
-        MOV BYTE [lineB], bl
-        ; the line of the opponent's grid is loaded in lineB
+        MOV BYTE al, [esi]
+        ; the line of the opponent's grid is loaded in al
+        PUSH ax
+        ; ax = ah al (="complete line") is pushed on the stack
         MOV BYTE [caracterIndex], 6
         ; starting at the highest for the mask shifting to the left :
         ;       0b01000000
@@ -98,8 +98,9 @@ section .text
         MOV bx, 0x0101
         SHL bx, cl                           
         ; mask on both bl and bh to check for the 2 grids
-        MOV ah, [lineA]
-        MOV al, [lineB]
+        POP ax
+        PUSH ax
+        ; "complete line" pushed again for the next iteration
         AND ax, bx
         JZ NOPAWN
         ; if the result of the AND is zero, no pawn is there
