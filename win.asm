@@ -24,9 +24,6 @@ section .text
         CALL SLANT2_WIN
         RET
 
-    RETURN:
-        RET
-
     H_WIN:                                   
     ; checks for - win
         AND ebx, 0
@@ -43,23 +40,62 @@ section .text
         MOV BYTE cl, 6
         MOV ch, [rowPos]
         SUB cl, ch
-        ; cl stores here the column that has to be checked
+        ; cl stores here the column-shift that has to be checked
+
+        ; Q :
+        ;   What is a column-shift (term used only for the WIN-related labels) ?
+        ; A :
+        ;   Because there is a usage of masks, it is easier to store by how much the byte
+        ;   has to be shifted instead of having its column number. Practically, it means that
+        ;   0 corresponds to the rightmost column and it increases when it goes left
+
+        MOV ch, 0
+        ; ch is used to move cl between each line (0 for a vertical line)
+
+        ; inconditionally go to CREATE_LINE
+
+    CREATE_LINE:
+        ; creates a line with the bits in actualPlayerGrid
+        ; with cl the top column shift
+        ; with ch the shift that must be applied between each line
+
         MOV esi, [actualPlayerGrid]
-        MOV bl, 0                            ; used as a counter for the number of lines
-        JMP FOR_EACH_LINE
+        MOV bl, 0                            
+        ; used as iteration counter for the number of lines
+
+        AND dl, 0
+        ; dl used to store the result
+        
+        ; inconditionally go to FOR_EACH_LINE
 
     FOR_EACH_LINE:
+
+        ; if we are ouside of the grid (right)
+        CMP cl, 0
+        JB SKIP_THIS_ROW
+
+        ; if we are ouside of the grid (left)
+        CMP cl, 6
+        JG SKIP_THIS_ROW
+
         MOV BYTE al, [esi]
         SHR al, cl
         ; puts the bit of interest at the right of al
         AND al, 1
         ADD dl, al
 
+    SKIP_THIS_ROW:
+        ; for the diagonals, the extremities are often outside the grid
+        ; so it doesn't have to be added
+
         SHL dl, 1
         ; shift to make place for the next bit
         INC esi
         ; points to the next line
+        ADD cl, ch
+        ; allows diagonal search
         INC bl
+        ; iteration ++
 
         ; if the whole column has not been looked yet
         CMP bl, 6
@@ -69,66 +105,31 @@ section .text
 
     SLANT1_WIN:                              
     ; checks for / win
-        MOV bl, [linePos]
-        MOV bh, [rowPos]
-        MOV BYTE cl, 5                       ; 5 and not 6 bcs cl is increased at FOR_SLANT1 before any operation
-        SUB cl, bl
-        SUB cl, bh                           ; cl is the shift (minus 1)
-        MOV esi, [actualPlayerGrid]
-        DEC esi
-        MOV BYTE ah, -1                      ; iteration counter
-        AND dl, 0x0                          ; result registers initalization
-        CALL FOR_SLANT1
-        JMP FIND4
+        MOV cl, 6
+        SUB cl, [linePos]
+        SUB cl, [rowPos]
+        ; cl contains the column-shift (might be < 0) corresponding to the highest row
+        ; of the diagonal that has to be checked
 
-    FOR_SLANT1:
-    ; checks for / win
-        INC esi
-        INC ah
-        INC cl
-        CMP cl, 0
-        JL FOR_SLANT1
-        MOV BYTE al, [esi]
-        SHR al, cl
-        AND al, 1
-        ADD dl, al
-        SHL dl, 1
-        CMP cl, 6
-        JE RETURN
-        CMP ah, 5
-        JE RETURN
-        JMP FOR_SLANT1
+        MOV ch, 1
+        ; ch is used to move cl between each line (1 because it goes to the bottom left)
+        ; could be confusing to be > 0 to go left but it is reversed (column-shift)
+
+        JMP CREATE_LINE
 
     SLANT2_WIN:                              
     ; checks for \ win
-        MOV bl, [linePos]
-        MOV bh, [rowPos]
-        MOV BYTE cl, 7          
-        ADD cl, bl
-        SUB cl, bh                           ; cl is the shift (plus 1)
-        MOV esi, [actualPlayerGrid]
-        DEC esi
-        MOV BYTE ah, -1                      ; iteration counter
-        AND dl, 0x0                          ; result registers initalization
-        CALL FOR_SLANT2
-        JMP FIND4
+        MOV cl, 6
+        SUB cl, [linePos]
+        ADD cl, [rowPos]
+        ; cl contains the column-shift (might be > 6) corresponding to the highest row
+        ; of the diagonal that has to be checked
 
-    FOR_SLANT2:
-        INC esi
-        INC ah
-        DEC cl
-        CMP cl, 7
-        JG FOR_SLANT2
-        MOV BYTE al, [esi]
-        SHR al, cl
-        AND al, 1
-        ADD dl, al
-        SHL dl, 1
-        CMP cl, 0
-        JE RETURN
-        CMP ah, 5
-        JE RETURN
-        JMP FOR_SLANT2
+        MOV ch, -1
+        ; ch is used to move cl between each line (-1 because it goes to the bottom right)
+        ; could be confusing to be < 0 to go right but it is reversed (column-shift)
+
+        JMP CREATE_LINE
 
     FIND4:
         MOV al, dl
