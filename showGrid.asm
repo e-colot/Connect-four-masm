@@ -91,8 +91,6 @@ section .text
         ;       ...
         ; inconditionally going to SHOW_CARACTER
 
-; -------------------- caracterIndex, lineA, lineB on stack ??? ---------------------------------------------------
-
     SHOW_CARACTER:
         MOV cl, [caracterIndex]
         MOV bx, 0x0101
