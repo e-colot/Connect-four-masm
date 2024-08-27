@@ -2,9 +2,6 @@
 
 %include "macros.inc"
 
-section .bss
-    lineBuffer RESB 1
-
 section .data
     endmsg DB 'End of the game', 0xA, 0xD, 0xA, 0xD
     lenendmsg EQU $ - endmsg
@@ -126,43 +123,29 @@ section .text
         JE RETURN
         JMP FOR_SLANT2
 
-; WHOLE SECTION : finds if there are 4 consecutive 1's in an 7 bit word (0b0xxxxxxx)
-
     FIND4:
-        ; finds if there are 4 consecutive 1's in an 7 bit word (0b0xxxxxxx)
-        ; the said word is stored in dl
-        MOV ax, 0x0001
-        ; ah is the streak counter (number of consecutive ones) = 0
-        ; al is the iteration counter = 1
-        TEST dl, 1
-        JZ FIND4_RESTART
-        ; if the bit was 1, go to FIND4_CONTINUE
-
-    FIND4_CONTINUE:
-        ;if the last bit was a 1
-        INC ah  ; streak++
-
-        ; checking if it is a 4-streak
-        CMP ah, 4
+        MOV al, dl
+        ; done in al not to lose the value in dl
+        AND al, 0b1111000
+        CMP al, 0b1111000
+        JE WIN
+        
+        MOV al, dl
+        AND al, 0b0111100
+        CMP al, 0b0111100
+        JE WIN
+        
+        MOV al, dl
+        AND al, 0b0011110
+        CMP al, 0b0011110
+        JE WIN
+        
+        MOV al, dl
+        AND al, 0b0001111
+        CMP al, 0b0001111
         JE WIN
 
-        ; inconditionally jump to NEXT_BIT
-
-    NEXT_BIT:
-        ; checking if the whole 7-bit word has been scanned
-        CMP al, 7
-        JE RETURN
-
-        SHR dl, 1
-        ; shifts to next bit
-        INC al  ; iteration++
-        TEST dl, 1
-        JNZ FIND4_CONTINUE
-        JMP FIND4_RESTART
-
-    FIND4_RESTART:
-        MOV ah, 0  ; streak = 0
-        JMP NEXT_BIT
+        RET
 
     WIN:
         PRNT endmsg, lenendmsg
