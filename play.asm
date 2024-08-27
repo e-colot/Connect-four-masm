@@ -21,6 +21,7 @@
 %macro ATURN 0
     MOV esi, gridA
     MOV [actualPlayerGrid], esi
+    ; playerA is playing
     PRNT inputmsg, leninputmsg
     INPUT
     MOV al, [inputBuffer]
@@ -65,40 +66,54 @@ section .text
     extern actualPlayerGrid
 
     CHECK_GRID:
+        ; tries to put the new pawn in the correct column
+        ; if not possible on the ground level, it tries higher ...
         MOV bl, [rowPos]
         MOV cl, 6
         SUB cl, bl
+        ; cl = 6 - rowPos
         MOV bx, 0x0101
-        SHL bx, cl                           ; mask
+        SHL bx, cl                           
+        ; same mask idea as in "showGrid.asm"
         MOV esi, gridA
         AND edx, 0
         MOV dl, [linePos]
         ADD esi, edx
         MOV BYTE ah, [esi]
+        ; ah = line (from playerA) in wich it tries to put a pawn
         MOV esi, gridB
         ADD esi, edx
         MOV BYTE al, [esi]
+        ; al = line (from playerB) in wich it tries to put a pawn
         AND ax, bx
         JE ADD_TO_GRID
+        ; add the pawn if there was no pawn on the desired place[actualPlayerGrid]
         MOV al, [linePos]
         DEC al
         MOV [linePos], al
-        JNS CHECK_GRID                        ; if linePos < 0
+        ; tries one row higher
+        JNS CHECK_GRID                        
+        ; if linePos < 0
         JMP INVALID_MOVE
 
     ADD_TO_GRID:
         MOV esi, [actualPlayerGrid]
-        AND edx, 0x0
+        AND edx, 0
+        ; edx = 0
         MOV dl, [linePos]
         ADD esi, edx
         MOV BYTE al, [esi]
         MOV BYTE bl, 1
+        ; bl has its uppermost right bit to 1 and will be shifted to the desired location
         MOV BYTE cl, 6
         SUB cl, [rowPos]
         SHL bl, cl
         OR al, bl
+        ; ADD could have done the work too
+        ; OR avoid overflowing in case of a programmation error
         MOV BYTE [esi], al
-        JMP NEXT_ROUND
+        ; grid changed
+        ; unconditionally go to NEXT_ROUND
 
     NEXT_ROUND:
         CALL SHOW_GRID
@@ -106,17 +121,18 @@ section .text
         MOV esi, [actualPlayerGrid]
         CMP esi, gridA
         JE LAUNCH_B_TURN
-        JMP LAUNCH_A_TURN
+        ; call LAUNCH_A_TURN if not equal
+
+    LAUNCH_A_TURN:
+        ATURN
 
     INVALID_MOVE:
         PRNT invalidmsg, leninvalidmsg
         MOV esi, [actualPlayerGrid]
         CMP esi, gridA
+        ; if it was playerA's turn, it should still be him playing
         JE LAUNCH_A_TURN
-        JMP LAUNCH_B_TURN
-
-    LAUNCH_A_TURN:
-        ATURN
+        ; call LAUNCH_B_TURN if not equal
 
     LAUNCH_B_TURN:
         BTURN
