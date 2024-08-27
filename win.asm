@@ -2,15 +2,6 @@
 
 %include "macros.inc"
 
-%macro NBR_COMMON_BITS 2                     ; output in dl
-    MOV al, [%1]
-    MOV bl, %2
-    AND al, bl
-    MOV dl, 0
-    MOV cl, 0
-    CALL COUNT_1
-%endmacro
-
 section .bss
     lineBuffer RESB 1
 
@@ -39,16 +30,6 @@ section .text
     RETURN:
         RET
 
-    COUNT_1:                                 ; with the total in dl, the count in cl and the byte in al
-        MOV bl, al                           ; using bl to not remove the byte from al
-        SHR bl, cl
-        AND bl, 0x1
-        ADD dl, bl
-        INC cl
-        CMP cl, 7
-        JNE COUNT_1
-        RET
-
     FOR_EACH_LINE:
         MOV BYTE dl, [esi]
         SHR dl, cl
@@ -61,26 +42,18 @@ section .text
         JNE FOR_EACH_LINE
         RET
 
-    H_WIN:                                   ; checks for - win
+    H_WIN:                                   
+    ; checks for - win
         AND ebx, 0x0
         MOV bl, [linePos]
         MOV esi, [actualPlayerGrid]
         ADD esi, ebx
         MOV al, [esi]
-        MOV [lineBuffer], al
-;   0x804a078 <lineBuffer>:       01001110
-;   Should be : 00001111 (or smth like it)
-; for the grid :
-;   *  *  *  *  *  *  *  
-;   *  *  *  *  *  *  *  
-;   *  O  *  *  *  *  *  
-;   O  O  O  *  *  *  *  
-;   O  O  O  *  *  *  *  
-;   O  O  O  *  *  *  *
+        MOV dl, al  ; could be changed after
+        JMP FIND4
 
-        JMP END_CHECK
-
-    V_WIN:                                   ; checks for | win
+    V_WIN:                                   
+    ; checks for | win
         MOV al, 0x1
         MOV BYTE cl, 6
         MOV ch, [rowPos]
@@ -88,8 +61,8 @@ section .text
         MOV esi, [actualPlayerGrid]
         MOV bl, 0                            ; used as a counter for the number of lines
         CALL FOR_EACH_LINE
-        MOV [lineBuffer], al
-        JMP END_CHECK
+        MOV dl, al  ; could be changed after
+        JMP FIND4
 
     SLANT1_WIN:                              ; checks for / win
         MOV bl, [linePos]
@@ -102,10 +75,10 @@ section .text
         MOV BYTE ah, -1                      ; iteration counter
         AND dl, 0x0                          ; result registers initalization
         CALL FOR_SLANT1
-        MOV [lineBuffer], dl
-        JMP END_CHECK
+        JMP FIND4
 
     FOR_SLANT1:
+    ; checks for / win
         INC esi
         INC ah
         INC cl
@@ -122,7 +95,8 @@ section .text
         JE RETURN
         JMP FOR_SLANT1
 
-    SLANT2_WIN:                              ; checks for \ win
+    SLANT2_WIN:                              
+    ; checks for \ win
         MOV bl, [linePos]
         MOV bh, [rowPos]
         MOV BYTE cl, 7          
@@ -133,8 +107,7 @@ section .text
         MOV BYTE ah, -1                      ; iteration counter
         AND dl, 0x0                          ; result registers initalization
         CALL FOR_SLANT2
-        MOV [lineBuffer], dl
-        JMP END_CHECK
+        JMP FIND4
 
     FOR_SLANT2:
         INC esi
@@ -153,22 +126,44 @@ section .text
         JE RETURN
         JMP FOR_SLANT2
 
-    END_CHECK:
-        NBR_COMMON_BITS lineBuffer, 0b1111000
-        CMP dl, 4
+; WHOLE SECTION : finds if there are 4 consecutive 1's in an 7 bit word (0b0xxxxxxx)
+
+    FIND4:
+        ; finds if there are 4 consecutive 1's in an 7 bit word (0b0xxxxxxx)
+        ; the said word is stored in dl
+        MOV ax, 0x0001
+        ; ah is the streak counter (number of consecutive ones) = 0
+        ; al is the iteration counter = 1
+        TEST dl, 1
+        JZ FIND4_RESTART
+        ; if the bit was 1, go to FIND4_CONTINUE
+
+    FIND4_CONTINUE:
+        ;if the last bit was a 1
+        INC ah  ; streak++
+
+        ; checking if it is a 4-streak
+        CMP ah, 4
         JE WIN
-        NBR_COMMON_BITS lineBuffer, 0b0111100
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS lineBuffer, 0b0011110
-        CMP dl, 4
-        JE WIN
-        NBR_COMMON_BITS lineBuffer, 0b0001111
-        CMP dl, 4
-        JE WIN
-        RET
+
+        ; inconditionally jump to NEXT_BIT
+
+    NEXT_BIT:
+        ; checking if the whole 7-bit word has been scanned
+        CMP al, 7
+        JE RETURN
+
+        SHR dl, 1
+        ; shifts to next bit
+        INC al  ; iteration++
+        TEST dl, 1
+        JNZ FIND4_CONTINUE
+        JMP FIND4_RESTART
+
+    FIND4_RESTART:
+        MOV ah, 0  ; streak = 0
+        JMP NEXT_BIT
 
     WIN:
         PRNT endmsg, lenendmsg
         JMP END_GAME
-
