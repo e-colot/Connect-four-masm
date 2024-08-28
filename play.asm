@@ -68,12 +68,10 @@ section .text
     CHECK_GRID:
         ; tries to put the new pawn in the correct column
         ; if not possible on the ground level, it tries higher ...
-        MOV bl, [rowPos]
-        MOV cl, 6
-        SUB cl, bl
-        ; cl = 6 - rowPos
-        MOV bx, 0x0101
-        SHL bx, cl                           
+        MOV cl, [rowPos]
+        MOV bx, 0x4040
+        ; hexa equivalent to the binary : 0100 0000 0100 0000
+        SHR bx, cl                           
         ; same mask idea as in "showGrid.asm"
         MOV esi, gridA
         AND edx, 0
