@@ -9,12 +9,17 @@
     MOV edx, 2
     int 0x80
     MOV al, [inputBuffer]
+
+    ; quits if 'q' is typed
     CMP al, 'q'
     JE END_GAME
+
     SUB al, '1'
-    JS INVALID_MOVE                          ; if last operation changed the sign (input < '1' in ASCII)
+    JS INVALID_MOVE                          
+    ; if last operation changed the sign (input < '1' in ASCII)
     CMP al, 6
-    JG INVALID_MOVE                          ; if input > '7' in ASCII
+    JG INVALID_MOVE                          
+    ; if input > '7' in ASCII
     MOV [inputBuffer], al
 %endmacro
 
@@ -25,9 +30,12 @@
     PRNT inputmsg, leninputmsg
     INPUT
     MOV al, [inputBuffer]
-    MOV [rowPos], al                         ; rowPos used to store the row
-    MOV BYTE [linePos], 5                    ; linePos used to store the line at which we are trying to add a pawn
-    JMP CHECK_GRID
+    MOV [rowPos], al                         ; rowPos used to store the row (0 - 6, left to right)
+    MOV BYTE [linePos], 5                    ; linePos used to store the line at which we are trying to add a pawn (0 - 5, top to bottom)
+
+    CALL CHECK_GRID
+    ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
+    JMP NEXT_ROUND
 %endmacro
 
 %macro BTURN 0
@@ -38,7 +46,10 @@
     MOV al, [inputBuffer]
     MOV [rowPos], al                         ; rowPos used to store the row
     MOV BYTE [linePos], 5                    ; linePos used to store the line at which we are trying to add a pawn
-    JMP CHECK_GRID
+
+    CALL CHECK_GRID
+    ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
+    JMP NEXT_ROUND
 %endmacro
 
 section .bss
@@ -111,7 +122,9 @@ section .text
         ; OR avoid overflowing in case of a programmation error
         MOV BYTE [esi], al
         ; grid changed
-        ; unconditionally go to NEXT_ROUND
+
+        ; end of the "check grid process"
+        RET
 
     NEXT_ROUND:
         CALL SHOW_GRID
