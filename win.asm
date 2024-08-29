@@ -2,7 +2,7 @@
 
 %include "macros.inc"
 
-section .data
+section .rodata
     endmsg DB 'End of the game', 0xA, 0xD, 0xA, 0xD
     lenendmsg EQU $ - endmsg
 

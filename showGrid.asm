@@ -6,7 +6,7 @@ section .bss
     caracterIndex RESB 1
     lineIndex RESB 1
 
-section .data
+section .rodata
     aPawn DB 'O'                             ; length of 1
     bPawn DB 'X'                             ; length of 1
     noPawn DB '*'                            ; length of 1

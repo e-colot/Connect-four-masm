@@ -6,6 +6,9 @@ section .bss
 section .data
     gridA TIMES 6 DB 0b00000000
     gridB TIMES 6 DB 0b00000000
+
+section .rodata
+    ; read only data -> perfect for constant strings
     startmsg DB 'start of the game', 0xA, 0xD
     lenstartmsg EQU $ - startmsg
 

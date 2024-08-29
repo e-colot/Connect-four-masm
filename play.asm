@@ -57,7 +57,7 @@ section .bss
     rowPos RESB 1
     inputBuffer RESB 2
 
-section .data
+section .rodata
     inputmsg DB 'Choose where to place your pawn', 0xA, 0xD
     leninputmsg EQU $ - inputmsg
     invalidmsg DB 'Invalid input', 0xA, 0xD
