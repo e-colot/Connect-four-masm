@@ -7,7 +7,11 @@ section .bss
     ; without loosing the real grids. However, it has been chosen to use them to store
     ; the real grids so other functions can still be called as if it was a "real" move
 
+
 section .data
+    moveValue TIMES 7 DB 0
+    ; list of 7 bytes in wich the value of each column will be stored (3rd element
+    ; of the list corresponding to the value of playing the 3rd column)
 
 section .text
 
@@ -57,18 +61,41 @@ section .text
     TRY_MOVES:
         ; loop to try to play every move
         MOV [rowPos], 6
-        MOV [linePos], 5
         ; once again doing it by decreasing the iteration to avoid a CMP
 
     TRY_LOOP:
+        ; preparing for the CHECK_GRID call
+        MOV cl, [rowPos]
+        MOV edx, 5
         CALL CHECK_GRID
 
-        ; DO SOMETHING
+        JNO SOMETHING
+        ; if overflow, directly go to END_TRY_LOOP
+        ; (overflow <=> column is full => moveValue = 0 wich is the default value)
+        ; => no need to call ADD_MOV_VALUE
+
+    END_TRY_LOOP:
 
         ; prepare for next iteration
-        MOV [linePos], 5
         DEC [rowPos]
         ; redo the loop while rowPos >= 0
         JNS TRY_LOOP
     
         RET
+
+    ADD_MOVE_VALUE:
+        ; puts the value in al in the moveValue list at rowPos position
+
+        MOV edi, moveValue
+        AND ecx, 0
+        ; clears ecx
+        MOV BYTE cl, [rowPos]
+        ADD edi, ecx
+
+        MOV [edi], al
+
+    SOMETHING
+
+        ; TODO
+
+        JMP END_TRY_LOOP
