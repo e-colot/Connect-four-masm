@@ -38,6 +38,10 @@
 
     CALL CHECK_GRID
     ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
+
+    JO INVALID_MOVE
+    ; if the overflow flag was (artificially) raised <=> full column
+
     JMP NEXT_ROUND
 %endmacro
 
@@ -54,6 +58,10 @@
 
     CALL CHECK_GRID
     ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
+
+    JO INVALID_MOVE
+    ; if the overflow flag was (artificially) raised <=> full column
+    
     JMP NEXT_ROUND
 %endmacro
 
@@ -85,6 +93,13 @@ section .text
 
     CHECK_GRID:
         ; called with rowPos in cl and linePos in edx
+        ; please note that rowPos is never set to cl so put
+        ; the value in both rowPos and cl before calling
+
+        ; in case of a success (a pawn has been added) the overflow flag (OF) will be set to 0
+        ; because of the OR al, bl which set it to 0 and the MOV instructions that let it unchanged
+
+        ; in case of a fail (full column), OF = 1
 
         ; tries to put the new pawn in the correct column
         ; if not possible on the ground level, it tries higher ...
@@ -112,8 +127,12 @@ section .text
 
         ; tries one row higher
         JNS CHECK_GRID                        
-        ; if linePos < 0
-        JMP INVALID_MOVE
+        ; if linePos < 0 ( <=> if the column is full)
+        ; raising the OF-flag :
+        MOV al, 0x7f  ; maximum positive value
+        INC al
+
+        RET
 
     ADD_TO_GRID:
         MOV esi, [actualPlayerGrid]
