@@ -108,13 +108,11 @@ section .text
         SHR bx, cl                           
         ; same mask idea as in "showGrid.asm"
 
-        MOV esi, gridA
-        ADD esi, edx
+        LEA esi, [gridA + edx]
         MOV BYTE ah, [esi]
         ; ah = line (from playerA) in wich it tries to put a pawn
 
-        MOV esi, gridB
-        ADD esi, edx
+        LEA esi, [gridB + edx]
         MOV BYTE al, [esi]
         ; al = line (from playerB) in wich it tries to put a pawn
 
@@ -138,8 +136,13 @@ section .text
         MOV esi, [actualPlayerGrid]
         ; edx = linePos (done in CHECK_GRID)
         ; (AND edx, 0; MOV dl, [linePos])
-
         ADD esi, edx
+
+        ; tried to replace the paragraph above by :
+        ; LEA esi, [actualPlayerGrid + edx]
+        ; but it would load the adress of actualPlayerGrid, not
+        ; the adress stored in actualPlayeGrid (bcs it is a pointer)
+
         MOV BYTE al, [esi]
         MOV bl, 0x40
         ; hexa equivalent to the binary : 0100 0000
@@ -147,7 +150,10 @@ section .text
         ; cl = rowPos
         OR al, bl
 
-        MOV BYTE [esi], al
+        MOV edi, esi
+        ; using edi for a destination pointer (readibility purpose)
+
+        MOV BYTE [edi], al
         ; grid changed
 
         MOV [linePos], dl

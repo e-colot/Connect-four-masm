@@ -1,3 +1,1 @@
-remove the "column-shift" notation from win.asm using SHR instead of SHL
-
-esi has been used everytime a pointer was needed but it might be replaced by edi in some cases
+remove the "column-shift" notation from win.asm using SHR instead of SHLS

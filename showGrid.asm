@@ -72,14 +72,14 @@ section .text
     SHOW_LINE:
         MOVZX ecx, BYTE [lineIndex]          
         ; lineIndex on 1 byte so we have to extend zeros to fill ecx
-        ; ecx must be filled to then add it with esi (4 bytes)
-        MOV esi, gridA
-        ADD esi, ecx
+        ; ecx must be filled to then add it with the address of gridA (4 bytes)
+        LEA esi, [gridA + ecx]
         ; esi is now pointing to the current line in gridA
+
         MOV BYTE ah, [esi]
         ; the line is loaded in ah
-        MOV esi, gridB
-        ADD esi, ecx
+
+        LEA esi, [gridB + ecx]
         MOV BYTE al, [esi]
         ; the line of the opponent's grid is loaded in al
         PUSH ax

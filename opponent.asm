@@ -69,7 +69,7 @@ section .text
         MOV edx, 5
         CALL CHECK_GRID
 
-        JNO SOMETHING
+        JNO EVALUATE_MOVE_SCORE
         ; if overflow, directly go to END_TRY_LOOP
         ; (overflow <=> column is full => moveValue = 0 wich is the default value)
         ; => no need to call ADD_MOV_VALUE
@@ -85,16 +85,14 @@ section .text
 
     ADD_MOVE_VALUE:
         ; puts the value in al in the moveValue list at rowPos position
-
-        MOV edi, moveValue
         AND ecx, 0
         ; clears ecx
         MOV BYTE cl, [rowPos]
-        ADD edi, ecx
+        LEA edi, [moveValue + ecx]
 
         MOV [edi], al
 
-    SOMETHING
+    EVALUATE_MOVE_SCORE:
 
         ; TODO
 
