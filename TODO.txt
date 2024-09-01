@@ -1,1 +1,0 @@
-remove the "column-shift" notation from win.asm using SHR instead of SHLS

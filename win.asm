@@ -6,6 +6,16 @@ section .rodata
     endmsg DB 'End of the game', 0xA, 0xD, 0xA, 0xD
     lenendmsg EQU $ - endmsg
 
+section .data
+    jumpTable:
+        dq FILTER4_0
+        dq FILTER4_1
+        dq FILTER4_2
+        dq FILTER4_3
+        dq FILTER4_4
+        dq FILTER4_5
+        dq FILTER4_6
+
 section .text
 
     global CHECK_FOR_WIN
@@ -26,13 +36,22 @@ section .text
 
     H_WIN:                                   
     ; checks for - win
-        AND ebx, 0
-        MOV bl, [linePos]
+        MOVZX ebx, BYTE [linePos]
         MOV esi, [actualPlayerGrid]
         ADD esi, ebx
         ; esi now points to the row that has to be checked
+
         MOV dl, [esi]
-        JMP FIND4
+        ; dl contains the row that has to be checked
+
+        MOVZX rbx, BYTE [rowPos]
+        MOV rax, 6
+        SUB rax, rbx
+        MOV rbx, jumpTable
+
+        MOV rdi, [rbx + rax*8]
+        ; loads the instruction address from jumpTable
+        JMP rdi
 
     V_WIN:                                   
     ; checks for | win
@@ -101,7 +120,14 @@ section .text
         CMP bl, 6
         JNE FOR_EACH_LINE
 
-        JMP FIND4
+        MOVZX rbx, BYTE [linePos]
+        MOV rax, 5
+        SUB rax, rbx
+        MOV rbx, jumpTable
+
+        MOV rdi, [rbx + rax*8]
+        ; loads the instruction address from jumpTable
+        JMP rdi
 
     SLANT1_WIN:                              
     ; checks for / win
@@ -131,29 +157,55 @@ section .text
 
         JMP CREATE_LINE
 
-    FIND4:
-        MOV al, dl
-        ; done in al not to lose the value in dl
-        AND al, 0b1111000
-        CMP al, 0b1111000
-        JE WIN
-        
-        MOV al, dl
-        AND al, 0b0111100
-        CMP al, 0b0111100
-        JE WIN
-        
+; this whole section is to be used in the jumpTable to check only
+; the combinations that are possible
+
+    FILTER4_4:        
         MOV al, dl
         AND al, 0b0011110
         CMP al, 0b0011110
         JE WIN
-        
+
+    FILTER4_5:        
+        MOV al, dl
+        AND al, 0b0111100
+        CMP al, 0b0111100
+        JE WIN
+
+    FILTER4_6:        
+        MOV al, dl
+        AND al, 0b1111000
+        CMP al, 0b1111000
+        JE WIN
+
+        RET
+
+    FILTER4_3:        
+        MOV al, dl
+        AND al, 0b1111000
+        CMP al, 0b1111000
+        JE WIN
+
+    FILTER4_2:        
+        MOV al, dl
+        AND al, 0b0111100
+        CMP al, 0b0111100
+        JE WIN
+
+    FILTER4_1:        
+        MOV al, dl
+        AND al, 0b0011110
+        CMP al, 0b0011110
+        JE WIN
+
+    FILTER4_0:        
         MOV al, dl
         AND al, 0b0001111
         CMP al, 0b0001111
         JE WIN
 
         RET
+
 
     WIN:
         PRNT endmsg, lenendmsg
