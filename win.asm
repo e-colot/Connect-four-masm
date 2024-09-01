@@ -82,7 +82,7 @@ section .text
         MOV bl, 0                            
         ; used as iteration counter for the number of lines
 
-        AND dl, 0
+        MOV dl, 0
         ; dl used to store the result
         
         ; inconditionally go to FOR_EACH_LINE

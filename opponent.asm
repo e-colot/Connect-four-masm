@@ -84,13 +84,13 @@ section .text
         RET
 
     ADD_MOVE_VALUE:
-        ; puts the value in al in the moveValue list at rowPos position
-        AND ecx, 0
-        ; clears ecx
-        MOV BYTE cl, [rowPos]
+        ; adds the value in al to the moveValue list at rowPos position
+        MOVZX ecx, BYTE [rowPos]
         LEA edi, [moveValue + ecx]
 
-        MOV [edi], al
+        MOV bl, [edi]
+        ADD bl, al
+        MOV [edi], bl
 
     EVALUATE_MOVE_SCORE:
 
