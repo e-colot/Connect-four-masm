@@ -13,9 +13,22 @@ section .data
     ; list of 7 bytes in wich the value of each column will be stored (3rd element
     ; of the list corresponding to the value of playing the 3rd column)
 
+    jumpTablePoints:
+        dq FILTER3_0
+        dq FILTER3_1
+        dq FILTER3_2
+        dq FILTER3_3
+        dq FILTER3_4
+        dq FILTER3_5
+        dq FILTER3_6
+
 section .text
 
+    global jumpTablePoints
+    gloabl ADD_MOVE_VALUE
+
     extern CHECK_GRID
+    extern CHECK_FOR_WIN
     extern gridA
     extern gridB
     extern actualPlayerGrid
@@ -23,26 +36,27 @@ section .text
     extern linePos
 
     OPPONENTS_TURN:
+        MOV esi, gridA
+        MOV edi, fakeGridA
         CALL COPY_GRIDS
-        ; for each row, call check_grid
+        
+        MOV esi, gridB
+        MOV edi, fakeGridB
+        CALL COPY_GRIDS
+
+        ; for each row, call check_grid and evaluate them
+        CALL TRY_MOVES
+
+        ; search for the best score in the list (TODO)
+
 
     COPY_GRIDS:
-        ; copies gridA-B in fakeGridA-B
+        ; copies esi in edi
+        ; (for 6 bytes list)
 
-        MOV esi, gridA
-        ; (esi = source)
-        MOV edi, fakeGridA
-        ; (edi = destination)
         MOV al, 6
         ; iteration counter set to 6 to avoid a CMP
         ; DEC al will raise the zero flag at the end
-
-        CALL COPY_LOOP
-
-        ; same for B
-        MOV esi, gridB
-        MOV edi, fakeGridB
-        MOV al, 6
 
         CALL COPY_LOOP
         RET
@@ -77,7 +91,19 @@ section .text
     END_TRY_LOOP:
 
         ; prepare for next iteration
+
+        ; trying one row lower
         DEC [rowPos]
+
+        ; resetting the grid
+        MOV esi, fakeGridA
+        MOV edi, gridA
+        CALL COPY_GRIDS
+        
+        MOV esi, fakeGridB
+        MOV edi, gridB
+        CALL COPY_GRIDS
+
         ; redo the loop while rowPos >= 0
         JNS TRY_LOOP
     
@@ -85,6 +111,8 @@ section .text
 
     ADD_MOVE_VALUE:
         ; adds the value in al to the moveValue list at rowPos position
+        ; dh has to stay untouched here (= 0 if real move)
+        ; dl has to stay untouched here (stores a line)
         MOVZX ecx, BYTE [rowPos]
         LEA edi, [moveValue + ecx]
 
@@ -92,8 +120,82 @@ section .text
         ADD bl, al
         MOV [edi], bl
 
+        RET
+
     EVALUATE_MOVE_SCORE:
 
-        ; TODO
+        MOV dh, 1
+        ; indicates that it is not a real move so the CHECK_FOR_WIN
+        ; call will be used to evaluate what the move is worth
+        CALL CHECK_FOR_WIN
 
         JMP END_TRY_LOOP
+
+    FILTER3_4:        
+        MOV al, dl
+        AND al, 0b0011100
+        CMP al, 0b0011100
+        CALL ANALYSE_FILTER_OUTPUT
+
+    FILTER3_5:        
+        MOV al, dl
+        AND al, 0b0111000
+        CMP al, 0b0111000
+        CALL ANALYSE_FILTER_OUTPUT
+
+    FILTER3_6:        
+        MOV al, dl
+        AND al, 0b1110000
+        CMP al, 0b1110000
+        CALL ANALYSE_FILTER_OUTPUT
+
+        RET
+
+    FILTER3_3:        
+        MOV al, dl
+        AND al, 0b0111000
+        CMP al, 0b0111000
+        CALL ANALYSE_FILTER_OUTPUT
+        
+        MOV al, dl
+        AND al, 0b0011100
+        CMP al, 0b0011100
+        CALL ANALYSE_FILTER_OUTPUT
+        
+        MOV al, dl
+        AND al, 0b0001110
+        CMP al, 0b0001110
+        CALL ANALYSE_FILTER_OUTPUT
+
+        RET
+
+    FILTER3_2:        
+        MOV al, dl
+        AND al, 0b0011100
+        CMP al, 0b0011100
+        CALL ANALYSE_FILTER_OUTPUT
+
+    FILTER3_1:        
+        MOV al, dl
+        AND al, 0b0001110
+        CMP al, 0b0001110
+        CALL ANALYSE_FILTER_OUTPUT
+
+    FILTER3_0:        
+        MOV al, dl
+        AND al, 0b0000111
+        CMP al, 0b0000111
+        CALL ANALYSE_FILTER_OUTPUT
+
+        RET
+
+    ANALYSE_FILTER_OUTPUT:
+        JE ALIGNED_3
+        ; if 3 pawns are aligned
+        RET
+
+    ALIGNED_3:
+        MOV al, 1
+        ; value to add to score is in al
+        JMP ADD_MOVE_VALUE
+        ; jump here so the RET from ADD_MOVE_VALUE heads to the FILTER3

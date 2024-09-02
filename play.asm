@@ -165,6 +165,8 @@ section .text
 
     NEXT_ROUND:
         CALL SHOW_GRID
+        MOV dh, 0
+        ; dh != 0 implies that it is a hypothetic move by the opponent
         CALL CHECK_FOR_WIN
         MOV esi, [actualPlayerGrid]
         CMP esi, gridA

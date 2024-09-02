@@ -20,14 +20,18 @@ section .text
 
     global CHECK_FOR_WIN
 
+    extern ADD_MOVE_VALUE
     extern END_GAME
     extern gridA
     extern gridB
     extern actualPlayerGrid
     extern linePos
     extern rowPos
+    extern jumpTablePoints
 
     CHECK_FOR_WIN:
+        ; dh != 0 implies that it is a hypothetic move by the opponent
+        ; dh because it stays untouched in the whole file 
         CALL H_WIN
         CALL V_WIN
         CALL SLANT1_WIN
@@ -120,10 +124,15 @@ section .text
         CMP bl, 6
         JNE FOR_EACH_LINE
 
-        MOVZX rbx, BYTE [linePos]
-        MOV rax, 5
-        SUB rax, rbx
         MOV rbx, jumpTable
+        ; inconditionally jumps to CALL_TABLE
+
+    CALL_TABLE:
+        ; calls a jumpTable (stored in rbx) with an offset of linePos
+        
+        MOVZX rcx, BYTE [linePos]
+        MOV rax, 5
+        SUB rax, rcx
 
         MOV rdi, [rbx + rax*8]
         ; loads the instruction address from jumpTable
@@ -164,48 +173,74 @@ section .text
         MOV al, dl
         AND al, 0b0011110
         CMP al, 0b0011110
-        JE WIN
+        CALL ANALYSE_FILTER_OUTPUT
 
-    FILTER4_5:        
+    FILTER4_5:          
         MOV al, dl
         AND al, 0b0111100
         CMP al, 0b0111100
-        JE WIN
+        CALL ANALYSE_FILTER_OUTPUT
 
     FILTER4_6:        
         MOV al, dl
         AND al, 0b1111000
         CMP al, 0b1111000
-        JE WIN
+        CALL ANALYSE_FILTER_OUTPUT
 
         RET
 
-    FILTER4_3:        
+    FILTER4_3:          
         MOV al, dl
         AND al, 0b1111000
         CMP al, 0b1111000
-        JE WIN
+        CALL ANALYSE_FILTER_OUTPUT
 
-    FILTER4_2:        
+    FILTER4_2:          
         MOV al, dl
         AND al, 0b0111100
         CMP al, 0b0111100
-        JE WIN
+        CALL ANALYSE_FILTER_OUTPUT
 
-    FILTER4_1:        
+    FILTER4_1:          
         MOV al, dl
         AND al, 0b0011110
         CMP al, 0b0011110
-        JE WIN
+        CALL ANALYSE_FILTER_OUTPUT
 
     FILTER4_0:        
         MOV al, dl
         AND al, 0b0001111
         CMP al, 0b0001111
-        JE WIN
+        CALL ANALYSE_FILTER_OUTPUT
 
         RET
 
+    ANALYSE_FILTER_OUTPUT:
+        ; always originates from a JMP from a FILTER4_x
+        ; zero flag raised if 4 aligned
+        JE ALIGNED_4
+
+        ; if it is not a real move
+        CMP dh, 0
+        JNE CHECK_FOR_3
+
+        RET
+
+    ALIGNED_4:
+        CMP dh, 0
+        ; if it is a real move
+        JE WIN
+
+        MOV al, 15
+        ; value to add to score is in al
+        CALL ADD_MOVE_VALUE
+        ; unconditionally jump to CHECK_FOR_3
+
+    CHECK_FOR_3:
+        MOV rbx, jumpTablePoints
+        JMP CALL_TABLE
+        ; (informatively, the last stack element heads to one of the FILTER4)
+        ; so each of the FILTER3 must lead to a RET
 
     WIN:
         PRNT endmsg, lenendmsg
