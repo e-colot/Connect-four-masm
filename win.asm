@@ -30,7 +30,7 @@ section .text
     extern jumpTablePoints
 
     CHECK_FOR_WIN:
-        ; dh != 0 implies that it is a hypothetic move by the opponent
+        ; dh = 1 000 XXXX implies that it is a hypothetic move by the opponent
         ; dh because it stays untouched in the whole file 
         CALL H_WIN
         CALL V_WIN
@@ -48,14 +48,20 @@ section .text
         MOV dl, [esi]
         ; dl contains the row that has to be checked
 
-        MOVZX rbx, BYTE [rowPos]
-        MOV rax, 6
-        SUB rax, rbx
+    ; this section prepares for CALL_TABLE (details are in the descrption
+    ; of CALL_TABLE)
+        MOV al, 6
+        MOV bl, BYTE [rowPos]
+        SUB al, bl
+        ; al contains the offset (4 bits)
+
+        AND dh, 0b10000000
+        ; preserves only the highest bit of dh
+        ADD dh, al
+
         MOV rbx, jumpTable
 
-        MOV rdi, [rbx + rax*8]
-        ; loads the instruction address from jumpTable
-        JMP rdi
+        CALL CALL_TABLE
 
     V_WIN:                                   
     ; checks for | win
@@ -81,6 +87,8 @@ section .text
         ; creates a line with the bits in actualPlayerGrid
         ; with cl the top column shift
         ; with ch the shift that must be applied between each line
+
+        ; used for / | \ but not -
 
         MOV esi, [actualPlayerGrid]
         MOV bl, 0                            
@@ -124,15 +132,42 @@ section .text
         CMP bl, 6
         JNE FOR_EACH_LINE
 
+        ; preparation for CALL_TABLE
+        MOV al, 5
+        MOV bl, BYTE [linePos]
+        SUB al, bl
+        ; al contains the offset (4 bits)
+
+        AND dh, 0b10000000
+        ; preserves only the highest bit of dh
+        ADD dh, al
+
         MOV rbx, jumpTable
+
         ; inconditionally jumps to CALL_TABLE
 
     CALL_TABLE:
-        ; calls a jumpTable (stored in rbx) with an offset of linePos
+        ; calls a jumpTable (stored in rbx) with an offset
+
+        ; this offset is either 5-linePos or 6-rowPos
+        ; it is the first one if a horizontal line is checked
+        ; and the second one in any other case
+
+        ; as dh is used to check if it is a real move (1 bit used)
+        ; but still stays unchanged, the "real-satus bit" will
+        ; be on the left of dh and the offset on the right of dh
+        ; the offset being between 0 and 7, it only takes 4 bits
+
+        ; so dh looks like
+        ; R 000 XXXX
+        ; with R the "real-status bit"
+        ; and X the offset value
         
-        MOVZX rcx, BYTE [linePos]
-        MOV rax, 5
-        SUB rax, rcx
+        MOVZX rax, dx
+        SHR rax, 8
+        
+        AND al, 0b00001111
+        ; removes the "real-status bit"
 
         MOV rdi, [rbx + rax*8]
         ; loads the instruction address from jumpTable
@@ -186,6 +221,10 @@ section .text
         AND al, 0b1111000
         CMP al, 0b1111000
         CALL ANALYSE_FILTER_OUTPUT
+        
+        ; if it is not a real move
+        TEST dh, 0b10000000
+        JNE CHECK_FOR_3
 
         RET
 
@@ -213,28 +252,27 @@ section .text
         CMP al, 0b0001111
         CALL ANALYSE_FILTER_OUTPUT
 
+        ; if it is not a real move
+        TEST dh, 0b10000000
+        JNZ CHECK_FOR_3
+
         RET
 
     ANALYSE_FILTER_OUTPUT:
-        ; always originates from a JMP from a FILTER4_x
-        ; zero flag raised if 4 aligned
-        JE ALIGNED_4
-
-        ; if it is not a real move
-        CMP dh, 0
-        JNE CHECK_FOR_3
-
+        JZ ALIGNED_4
+        ; if 4 pawns are aligned
         RET
 
     ALIGNED_4:
-        CMP dh, 0
+        TEST dh, 0b10000000
         ; if it is a real move
-        JE WIN
+        JZ WIN
 
-        MOV al, 15
+        MOV al, 10
         ; value to add to score is in al
         CALL ADD_MOVE_VALUE
         ; unconditionally jump to CHECK_FOR_3
+        RET
 
     CHECK_FOR_3:
         MOV rbx, jumpTablePoints

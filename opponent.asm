@@ -1,7 +1,8 @@
 %include "macros.inc"
 
 section .bss
-    fakeGridA RESB 6
+    ;fakeGridA RESB 6
+    ;useless, gridA stays unchanged
     fakeGridB RESB 6
     ; the inital plan was to use these fake grids to simulate hypothetical moves
     ; without loosing the real grids. However, it has been chosen to use them to store
@@ -25,7 +26,8 @@ section .data
 section .text
 
     global jumpTablePoints
-    gloabl ADD_MOVE_VALUE
+    global ADD_MOVE_VALUE
+    global OPPONENTS_TURN
 
     extern CHECK_GRID
     extern CHECK_FOR_WIN
@@ -36,9 +38,10 @@ section .text
     extern linePos
 
     OPPONENTS_TURN:
-        MOV esi, gridA
-        MOV edi, fakeGridA
-        CALL COPY_GRIDS
+        ;MOV esi, gridA
+        ;MOV edi, fakeGridA
+        ;CALL COPY_GRIDS
+    ;useless, gridA stays unchanged
         
         MOV esi, gridB
         MOV edi, fakeGridB
@@ -47,7 +50,33 @@ section .text
         ; for each row, call check_grid and evaluate them
         CALL TRY_MOVES
 
-        ; search for the best score in the list (TODO)
+        MOV esi, moveValue
+        MOV edx, 6
+
+        MOV ebx, 0
+        ; bh stores the best index
+        ; bl stores the best value = 0 by default
+
+    FIND_BEST:
+        MOV al, BYTE [esi + edx]
+        CMP al, bl
+        JNG NEXT_VERIFICATION
+
+        ; if the new element is bigger than the last one
+        MOV bl, al
+        MOV bh, dl
+        ; stores in bh the greatest number index
+
+    NEXT_VERIFICATION:
+        DEC edx
+        JNS FIND_BEST
+
+        ; if the whole list has been treated, puts the best move in cl
+        MOV cl, bh 
+        ; and puts its value in rowPos
+        MOV [rowPos], cl
+
+        RET
 
 
     COPY_GRIDS:
@@ -74,7 +103,7 @@ section .text
 
     TRY_MOVES:
         ; loop to try to play every move
-        MOV [rowPos], 6
+        MOV BYTE [rowPos], 6
         ; once again doing it by decreasing the iteration to avoid a CMP
 
     TRY_LOOP:
@@ -92,19 +121,21 @@ section .text
 
         ; prepare for next iteration
 
-        ; trying one row lower
-        DEC [rowPos]
-
         ; resetting the grid
-        MOV esi, fakeGridA
-        MOV edi, gridA
-        CALL COPY_GRIDS
+        ;MOV esi, fakeGridA
+        ;MOV edi, gridA
+        ;CALL COPY_GRIDS
+    ;useless, gridA stays unchanged
         
         MOV esi, fakeGridB
         MOV edi, gridB
         CALL COPY_GRIDS
 
+        ; trying one row lower
+        DEC BYTE [rowPos]
+
         ; redo the loop while rowPos >= 0
+    ;but it doesn't seems to work as expected
         JNS TRY_LOOP
     
         RET
@@ -124,7 +155,7 @@ section .text
 
     EVALUATE_MOVE_SCORE:
 
-        MOV dh, 1
+        MOV dh, 0b10000000
         ; indicates that it is not a real move so the CHECK_FOR_WIN
         ; call will be used to evaluate what the move is worth
         CALL CHECK_FOR_WIN
@@ -190,7 +221,7 @@ section .text
         RET
 
     ANALYSE_FILTER_OUTPUT:
-        JE ALIGNED_3
+        JZ ALIGNED_3
         ; if 3 pawns are aligned
         RET
 

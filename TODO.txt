@@ -1,0 +1,3 @@
+remove macros A_TURN and B_TURN
+
+replace J(N)E by J(N)Z (JE is supposed to be not supported in 64bits)

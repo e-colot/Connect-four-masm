@@ -48,12 +48,15 @@
 %macro BTURN 0
     MOV esi, gridB
     MOV [actualPlayerGrid], esi
-    PRNT inputmsg, leninputmsg
-    INPUT
+    ;PRNT inputmsg, leninputmsg
+    ;INPUT
     ; the input is in inputBuffer and in cl
 
     ; set up for CHECK_GRID call (cl = rowPos, edx = linePos)
-    MOV [rowPos], cl                         
+    ;MOV [rowPos], cl       
+
+    CALL OPPONENTS_TURN
+ 
     MOV edx, 5
 
     CALL CHECK_GRID
@@ -83,10 +86,12 @@ section .text
     global LAUNCH_A_TURN
     global linePos
     global rowPos
+    global CHECK_GRID
 
     extern CHECK_FOR_WIN
     extern SHOW_GRID
     extern END_GAME
+    extern OPPONENTS_TURN
     extern gridA
     extern gridB
     extern actualPlayerGrid
