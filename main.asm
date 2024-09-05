@@ -28,9 +28,18 @@ section .text
         PRNT startmsg, lenstartmsg
         
 ; ------------ DEBUG ----------------
-        ;MOV edi, gridB
-        ;ADD edi, 5
-        ;MOV [edi], BYTE 0b1100
+        MOV edi, gridB
+        MOV esi, gridA
+        ADD esi, 1
+        MOV [esi], BYTE 0b1111111
+        ADD edi, 2
+        MOV [edi], BYTE 0b1111111
+        ADD esi, 2
+        MOV [esi], BYTE 0b1111111
+        ADD edi, 2
+        MOV [edi], BYTE 0b1111111
+        ADD esi, 2
+        MOV [esi], BYTE 0b1111111
 ; -----------------------------------
 
         CALL SHOW_GRID

@@ -129,6 +129,16 @@ section .text
         MOV dh, 0
         ; dh != 0 implies that it is a hypothetic move by the opponent
         CALL CHECK_FOR_WIN
+
+        ; check if its a draw (top row filled)
+        MOV al, BYTE [gridA]
+        MOV ah, BYTE [gridB]
+        XOR al, ah
+        CMP al, 0x7F
+        ; al = 0b01111111 = 0x7F if the grid is filled
+        JZ END_GAME
+
+        ; launch next turn
         MOV esi, [actualPlayerGrid]
         CMP esi, gridA
         JZ LAUNCH_B_TURN
