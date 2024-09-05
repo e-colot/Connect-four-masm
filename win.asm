@@ -156,17 +156,17 @@ section .text
         ; as dh is used to check if it is a real move (1 bit used)
         ; but still stays unchanged, the "real-satus bit" will
         ; be on the left of dh and the offset on the right of dh
-        ; the offset being between 0 and 7, it only takes 4 bits
+        ; the offset being between 0 and 7, it only takes 3 bits
 
         ; so dh looks like
-        ; R 000 XXXX
+        ; R 0000 XXX
         ; with R the "real-status bit"
         ; and X the offset value
         
         MOVZX rax, dx
         SHR rax, 8
         
-        AND al, 0b00001111
+        AND al, 0b00000111
         ; removes the "real-status bit"
 
         MOV rdi, [rbx + rax*8]
