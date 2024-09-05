@@ -78,7 +78,7 @@ section .text
         ;   has to be shifted instead of having its column number. Practically, it means that
         ;   0 corresponds to the rightmost column and it increases when it goes left
 
-        MOV ch, 0
+        XOR ch, ch
         ; ch is used to move cl between each line (0 for a vertical line)
 
         ; inconditionally go to CREATE_LINE
@@ -91,7 +91,7 @@ section .text
         ; used for / | \ but not -
 
         MOV esi, [actualPlayerGrid]
-        MOV bl, 0                            
+        XOR bl, bl                 
         ; used as iteration counter for the number of lines
 
         MOV dl, 0

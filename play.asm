@@ -126,7 +126,7 @@ section .text
 
     NEXT_ROUND:
         CALL SHOW_GRID
-        MOV dh, 0
+        XOR dh, dh
         ; dh != 0 implies that it is a hypothetic move by the opponent
         CALL CHECK_FOR_WIN
 

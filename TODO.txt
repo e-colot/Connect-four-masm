@@ -1,3 +1,1 @@
 add randomness in equal score moves
-
-use XOR al, al instead of MOV al, 0 (2 bytes in memory instead of 5)

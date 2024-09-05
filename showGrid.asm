@@ -103,6 +103,7 @@ section .text
         JZ NOPAWN
         ; if the result of the AND is zero, no pawn is there
         CMP ax, 0x0100
+        ; if the raised bit is on the higher byte of ax, it is a A pawn
         JGE APAWN
         JMP BPAWN
 
