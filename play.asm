@@ -14,7 +14,7 @@
 
     ; quits if 'q' is typed
     CMP cl, 'q'
-    JE END_GAME
+    JZ END_GAME
 
     SUB cl, '1'
     JS INVALID_MOVE                          
@@ -78,7 +78,7 @@ section .text
         ; al = line (from playerB) in wich it tries to put a pawn
 
         AND ax, bx
-        JE ADD_TO_GRID
+        JZ ADD_TO_GRID
         ; add the pawn if there was no pawn on the desired place in actualPlayerGrid
 
         ; (dl = linePos)
@@ -131,7 +131,7 @@ section .text
         CALL CHECK_FOR_WIN
         MOV esi, [actualPlayerGrid]
         CMP esi, gridA
-        JE LAUNCH_B_TURN
+        JZ LAUNCH_B_TURN
         ; call LAUNCH_A_TURN if not equal
 
     LAUNCH_A_TURN:
@@ -159,7 +159,7 @@ section .text
         MOV esi, [actualPlayerGrid]
         CMP esi, gridA
         ; if it was playerA's turn, it should still be him playing
-        JE LAUNCH_A_TURN
+        JZ LAUNCH_A_TURN
         ; call LAUNCH_B_TURN if not equal
 
     LAUNCH_B_TURN:

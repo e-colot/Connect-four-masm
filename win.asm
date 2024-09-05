@@ -130,7 +130,7 @@ section .text
 
         ; if the whole column has not been looked yet
         CMP bl, 6
-        JNE FOR_EACH_LINE
+        JNZ FOR_EACH_LINE
 
         ; preparation for CALL_TABLE
         MOV al, 5
@@ -224,7 +224,7 @@ section .text
         
         ; if it is not a real move
         TEST dh, 0b10000000
-        JNE CHECK_FOR_3
+        JNZ CHECK_FOR_3
 
         RET
 
