@@ -53,7 +53,7 @@ section .text
         MOV esi, moveValue
         MOV edx, 6
 
-        MOV ebx, 0
+        XOR ebx, ebx
         ; bh stores the best index
         ; bl stores the best value = 0 by default
 
@@ -71,11 +71,22 @@ section .text
         DEC edx
         JNS FIND_BEST
 
+        ; prepares for the reset of the list
+
+        MOV edi, esi
+        ; start memory in edi
+        MOV ecx, 7 
+        ; do it seven times
+        XOR eax, eax
+        ; put eax to 0
+        REP STOSB
+
         ; if the whole list has been treated, puts the best move in cl
         MOV cl, bh 
         ; and puts its value in rowPos
         MOV [rowPos], cl
 
+        ; return to win.asm
         RET
 
 
