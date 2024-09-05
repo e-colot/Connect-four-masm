@@ -53,9 +53,11 @@ section .text
         MOV esi, moveValue
         MOV edx, 6
 
-        XOR ebx, ebx
+        XOR bh, bh
         ; bh stores the best index
-        ; bl stores the best value = 0 by default
+        MOV bl, -128
+        ; bl stores the best value = -128 by default
+        ; (worst value to avoid playing it)
 
     FIND_BEST:
         MOV al, BYTE [esi + edx]
@@ -124,9 +126,12 @@ section .text
         CALL CHECK_GRID
 
         JNO EVALUATE_MOVE_SCORE
-        ; if overflow, directly go to END_TRY_LOOP
-        ; (overflow <=> column is full => moveValue = 0 wich is the default value)
-        ; => no need to call ADD_MOV_VALUE
+        ; if overflow, go to END_TRY_LOOP without evaluating the score
+        ; (overflow <=> column is full => moveValue = -10 to not select it)
+        MOV al, -10
+        CALL ADD_MOVE_VALUE
+
+        ; unconditionally jump to END_TRY_LOOP
 
     END_TRY_LOOP:
 
