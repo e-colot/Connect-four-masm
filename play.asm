@@ -24,50 +24,6 @@
     ; if input > '7' in ASCII
 %endmacro
 
-%macro ATURN 0
-    MOV esi, gridA
-    MOV [actualPlayerGrid], esi
-    ; playerA is playing
-    PRNT inputmsg, leninputmsg
-    INPUT
-    ; the input is in inputBuffer and in cl
-
-    ; set up for CHECK_GRID call (cl = rowPos, edx = linePos)
-    MOV [rowPos], cl                         
-    MOV edx, 5
-
-    CALL CHECK_GRID
-    ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
-
-    JO INVALID_MOVE
-    ; if the overflow flag was (artificially) raised <=> full column
-
-    JMP NEXT_ROUND
-%endmacro
-
-%macro BTURN 0
-    MOV esi, gridB
-    MOV [actualPlayerGrid], esi
-    ;PRNT inputmsg, leninputmsg
-    ;INPUT
-    ; the input is in inputBuffer and in cl
-
-    ; set up for CHECK_GRID call (cl = rowPos, edx = linePos)
-    ;MOV [rowPos], cl       
-
-    CALL OPPONENTS_TURN
- 
-    MOV edx, 5
-
-    CALL CHECK_GRID
-    ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
-
-    JO INVALID_MOVE
-    ; if the overflow flag was (artificially) raised <=> full column
-    
-    JMP NEXT_ROUND
-%endmacro
-
 section .bss
     linePos RESB 1
     ; linePos used to store the line at which we are trying to add a pawn (0 - 5, top to bottom)
@@ -179,7 +135,24 @@ section .text
         ; call LAUNCH_A_TURN if not equal
 
     LAUNCH_A_TURN:
-        ATURN
+        MOV esi, gridA
+        MOV [actualPlayerGrid], esi
+        ; playerA is playing
+        PRNT inputmsg, leninputmsg
+        INPUT
+        ; the input is in inputBuffer and in cl
+
+        ; set up for CHECK_GRID call (cl = rowPos, edx = linePos)
+        MOV [rowPos], cl                         
+        MOV edx, 5
+
+        CALL CHECK_GRID
+        ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
+
+        JO INVALID_MOVE
+        ; if the overflow flag was (artificially) raised <=> full column
+
+        JMP NEXT_ROUND
 
     INVALID_MOVE:
         PRNT invalidmsg, leninvalidmsg
@@ -190,5 +163,24 @@ section .text
         ; call LAUNCH_B_TURN if not equal
 
     LAUNCH_B_TURN:
-        BTURN
+        MOV esi, gridB
+        MOV [actualPlayerGrid], esi
+        ;PRNT inputmsg, leninputmsg
+        ;INPUT
+        ; the input is in inputBuffer and in cl
+
+        ; set up for CHECK_GRID call (cl = rowPos, edx = linePos)
+        ;MOV [rowPos], cl       
+
+        CALL OPPONENTS_TURN
+    
+        MOV edx, 5
+
+        CALL CHECK_GRID
+        ; call and not jump so CHECK_GRID can be called in different contexts (opponent)
+
+        JO INVALID_MOVE
+        ; if the overflow flag was (artificially) raised <=> full column
+        
+        JMP NEXT_ROUND
 
