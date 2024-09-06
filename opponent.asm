@@ -73,6 +73,18 @@ section .text
         DEC edx
         JNS FIND_BEST
 
+        ; has to check if there are other moves with the same score
+        ; stores on 4 bits in r8 (64 bits reg) starting from the LSB the index
+        ; of the equal value moves
+        ; r9 will store the number of equal value moves 
+        ; rax will get a random number
+
+        XOR rcx, rcx
+        XOR r8, r8
+        XOR r9, r9
+        ; esi already pointing to moveValues
+        CALL FIND_EQUALS
+
         ; prepares for the reset of the list
 
         MOV edi, esi
@@ -81,6 +93,7 @@ section .text
         ; do it seven times
         XOR eax, eax
         ; put eax to 0
+
         REP STOSB
 
         ; if the whole list has been treated, puts the best move in cl
@@ -89,6 +102,72 @@ section .text
         MOV [rowPos], cl
 
         ; return to win.asm
+        RET
+
+    FIND_EQUALS:
+        ; must keep bx unchanged
+        ; rcx has to be set to 0 (iteration counter)
+        ; note that it is rcx NOT cl to "or" it with a 64 bit register
+
+        MOV al, BYTE [esi]
+        CMP al, bl
+        JNZ NEXT_EQUAL
+
+        ; if this move value is equal
+        SHL r8, 4
+        OR r8, rcx
+        INC r9
+
+    NEXT_EQUAL:
+        INC esi
+        INC cl
+        ; checks if the whole list has been processed
+        CMP cl, 7
+        JNZ FIND_EQUALS
+
+        ; unconditionally jump to get random
+
+    GET_RANDOM:
+
+        ; random number in rax
+        RDRAND rax
+        ; only keep the 3 lower bits of rax
+        AND rax, 0b111
+
+    IN_RANGE_FOR_RANDOM:
+        ; while rax > r9 {
+        ;     rax -= r9
+        ; }
+
+        CMP rax, r9
+        JB MODIFY_OUTPUT
+
+        ; note that it is JB and not JBE
+        ; because if there are (example) 3 moves with the same value, 
+        ; the choice must be 0, 1 or 2 but not 3
+
+        ; if not below, rax -= r9
+        SUB rax, r9
+        JMP IN_RANGE_FOR_RANDOM
+
+    MODIFY_OUTPUT:
+        ; change bh to select a random move (still with the highest score)
+        ; based on the value stored in rax
+        ; this value being on 3 bits, al can be used from now
+
+        MOV bl, 4
+        MUL bl
+        ; MUL needs a reg8 not an imm8
+
+        ; adding maximum 2 bits so still fit in al
+        MOV cl, al
+        ; SHR needs cl and not al
+        SHR r8, cl
+        AND r8, 0b1111
+        ; only keeps the bits of interest
+        MOV rax, r8
+        MOV bh, al
+
         RET
 
 

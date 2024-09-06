@@ -1,1 +1,3 @@
 add randomness in equal score moves
+
+comment every RET to where it leads

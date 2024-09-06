@@ -175,12 +175,6 @@ section .text
     LAUNCH_B_TURN:
         MOV esi, gridB
         MOV [actualPlayerGrid], esi
-        ;PRNT inputmsg, leninputmsg
-        ;INPUT
-        ; the input is in inputBuffer and in cl
-
-        ; set up for CHECK_GRID call (cl = rowPos, edx = linePos)
-        ;MOV [rowPos], cl       
 
         CALL OPPONENTS_TURN
     

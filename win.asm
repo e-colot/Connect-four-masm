@@ -111,7 +111,7 @@ section .text
 
         MOV BYTE al, [esi]
         SHR al, cl
-        ; puts the bit of interest at the right of al
+        ; puts the bit of interest as the LSB
         AND al, 1
         ADD dl, al
 
@@ -155,7 +155,7 @@ section .text
 
         ; as dh is used to check if it is a real move (1 bit used)
         ; but still stays unchanged, the "real-satus bit" will
-        ; be on the left of dh and the offset on the right of dh
+        ; be on the MSB of dh and the offset on the LSB of dh
         ; the offset being between 0 and 7, it only takes 3 bits
 
         ; so dh looks like
