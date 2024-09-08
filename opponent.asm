@@ -1,8 +1,6 @@
 %include "macros.inc"
 
 section .bss
-    ;fakeGridA RESB 6
-    ;useless, gridA stays unchanged
     fakeGridB RESB 6
     ; the inital plan was to use these fake grids to simulate hypothetical moves
     ; without loosing the real grids. However, it has been chosen to use them to store
@@ -38,10 +36,6 @@ section .text
     extern linePos
 
     OPPONENTS_TURN:
-        ;MOV esi, gridA
-        ;MOV edi, fakeGridA
-        ;CALL COPY_GRIDS
-    ;useless, gridA stays unchanged
         
         MOV esi, gridB
         MOV edi, fakeGridB
@@ -217,10 +211,6 @@ section .text
         ; prepare for next iteration
 
         ; resetting the grid
-        ;MOV esi, fakeGridA
-        ;MOV edi, gridA
-        ;CALL COPY_GRIDS
-    ;useless, gridA stays unchanged
         
         MOV esi, fakeGridB
         MOV edi, gridB
@@ -230,7 +220,6 @@ section .text
         DEC BYTE [rowPos]
 
         ; redo the loop while rowPos >= 0
-    ;but it doesn't seems to work as expected
         JNS TRY_LOOP
     
         RET
@@ -249,7 +238,6 @@ section .text
 
         RET
         ; exit the "add value processus"
-        ; (to ALIGNED4 or )
 
     EVALUATE_MOVE_SCORE:
 
