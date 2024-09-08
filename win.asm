@@ -132,6 +132,9 @@ section .text
 
     FOR_EACH_LINE:
 
+        SHL dl, 1
+        ; shift to make space for the next bit
+
         ; if we are ouside of the grid (right)
         CMP cl, 0
         JB SKIP_THIS_ROW
@@ -149,9 +152,6 @@ section .text
     SKIP_THIS_ROW:
         ; for the diagonals, the extremities are often outside the grid
         ; so it doesn't have to be added
-
-        SHL dl, 1
-        ; shift to make place for the next bit
         INC esi
         ; points to the next line
         ADD cl, ch
