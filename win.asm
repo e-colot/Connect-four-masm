@@ -205,8 +205,8 @@ section .text
         ; if it is a real move
         JZ WIN
 
-        MOV al, 10
-        ; value to add to score is in al
+        MOV ax, 10
+        ; value to add to score is in ax
 
         JMP ADD_MOVE_VALUE
         ; jump here so the RET from ADD_MOVE_VALUE leads to the next check in CHECK_FOR_WIN

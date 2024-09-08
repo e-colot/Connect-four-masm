@@ -8,8 +8,8 @@ section .bss
 
 
 section .data
-    moveValue TIMES 7 DB 0
-    ; list of 7 bytes in wich the value of each column will be stored (3rd element
+    moveValue TIMES 7 DW 0
+    ; list of 7 double bytes in wich the value of each column will be stored (3rd element
     ; of the list corresponding to the value of playing the 3rd column)
 
 section .text
@@ -39,23 +39,19 @@ section .text
         MOV esi, moveValue
         MOV edx, 6
 
-        XOR bh, bh
-        ; bh stores the best index
-        MOV bl, -128
-        ; bl stores the best value = -128 by default
-        ; (worst value to avoid playing it)
+        MOV bx, -32768
+        ; bx stores the best value = -32768 by default
+        ; (worst value on 2 bytes to avoid playing it)
 
 ; -------------------------- FIND BEST MOVE PROCESSUS --------------------------
 
     FIND_BEST:
-        MOV al, BYTE [esi + edx]
-        CMP al, bl
+        MOV ax, WORD [esi + 2*edx]
+        CMP ax, bx
         JNG NEXT_VERIFICATION
 
         ; if the new element is bigger than the last one
-        MOV bl, al
-        MOV bh, dl
-        ; stores in bh the greatest number index
+        MOV bx, ax
 
     NEXT_VERIFICATION:
         DEC edx
@@ -66,8 +62,9 @@ section .text
         ; of the equal value moves
         ; r9 will store the number of equal value moves 
         ; rax will get a random number
+        ; rdx will be the iteration counter
 
-        XOR rcx, rcx
+        XOR rdx, rdx
         XOR r8, r8
         XOR r9, r9
         ; esi already pointing to moveValues
@@ -79,10 +76,10 @@ section .text
         ; start memory in edi
         MOV ecx, 7 
         ; do it seven times
-        XOR eax, eax
-        ; put eax to 0
+        XOR ax, ax
+        ; put ax to 0
 
-        REP STOSB
+        REP STOSW
 
         ; if the whole list has been treated, puts the best move in cl
         MOV cl, bh 
@@ -94,22 +91,22 @@ section .text
 
     FIND_EQUALS:
         ; must keep bx unchanged
-        ; rcx has to be set to 0 (iteration counter)
-        ; note that it is rcx NOT cl to "or" it with a 64 bit register
+        ; rdx has to be set to 0 (iteration counter)
+        ; note that it is rdx NOT dl to "or" it with a 64 bit register
 
-        MOV al, BYTE [esi + ecx]
-        CMP al, bl
+        MOV ax, WORD [esi + 2*edx]
+        CMP ax, bx
         JNZ NEXT_EQUAL
 
         ; if this move value is equal
         SHL r8, 4
-        OR r8, rcx
+        OR r8, rdx
         INC r9
 
     NEXT_EQUAL:
-        INC cl
+        INC dl
         ; checks if the whole list has been processed
-        CMP cl, 7
+        CMP dl, 7
         JNZ FIND_EQUALS
 
         ; unconditionally jump to get random
@@ -139,6 +136,7 @@ section .text
 
     MODIFY_OUTPUT:
         ; change bh to select a random move (still with the highest score)
+        ; (temporary put in bh so ecx can be used for the reset)
         ; based on the value stored in rax
         ; this value being on 3 bits, al can be used from now
 
@@ -198,8 +196,8 @@ section .text
 
         JNO EVALUATE_MOVE_SCORE
         ; if overflow, go to END_TRY_LOOP without evaluating the score
-        ; (overflow <=> column is full => moveValue = -10 to not select it)
-        MOV al, -10
+        ; (overflow <=> column is full => moveValue = -50 to not select it)
+        MOV ax, -50
         CALL ADD_MOVE_VALUE
 
         ; unconditionally jump to END_TRY_LOOP
@@ -224,15 +222,16 @@ section .text
         ; returns to OPPONENTS_TURN
 
     ADD_MOVE_VALUE:
-        ; adds the value in al to the moveValue list at rowPos position
+        ; adds the value in ax to the moveValue list at rowPos position
         ; dh has to stay untouched here (= 0 if real move)
         ; dl has to stay untouched here (stores a line)
-        MOVZX ecx, BYTE [rowPos]
-        LEA edi, [moveValue + ecx]
 
-        MOV bl, [edi]
-        ADD bl, al
-        MOV [edi], bl
+        MOVZX ecx, BYTE [rowPos]
+        LEA edi, [moveValue + 2*ecx]
+
+        MOV bx, [edi]
+        ADD bx, ax
+        MOV [edi], bx
 
         RET
         ; exit the "add value processus"
@@ -249,13 +248,13 @@ section .text
 ; -------------------------- FILTERING PROCESSUS --------------------------
 
     ALIGNED_3:
-        MOV al, 3
-        ; value to add to score is in al
+        MOV ax, 3
+        ; value to add to score is in ax
         JMP ADD_MOVE_VALUE
         ; jump here so the RET from ADD_MOVE_VALUE leads to the next check in CHECK_FOR_WIN
 
     ALIGNED_2:
-        MOV al, 1
-        ; value to add to score is in al
+        MOV ax, 1
+        ; value to add to score is in ax
         JMP ADD_MOVE_VALUE
         ; jump here so the RET from ADD_MOVE_VALUE leads to the next check in CHECK_FOR_WIN
