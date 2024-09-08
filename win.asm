@@ -103,8 +103,8 @@ section .text
     SLANT2_WIN:                              
     ; checks for \ win
         MOV cl, 6
-        SUB cl, [linePos]
-        ADD cl, [rowPos]
+        SUB cl, [rowPos]
+        ADD cl, [linePos]
         ; cl contains the column-shift (might be > 6) corresponding to the highest row
         ; of the diagonal that has to be checked
 

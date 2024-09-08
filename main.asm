@@ -43,7 +43,7 @@ section .text
         MOV [esi], BYTE 0b0
         DEC esi
 
-        MOV [esi], BYTE 0b0
+        MOV [esi], BYTE 0b010000
         DEC esi
 
         MOV [esi], BYTE 0b0
