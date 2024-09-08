@@ -17,6 +17,7 @@ section .text
     global ADD_MOVE_VALUE
     global OPPONENTS_TURN
     global ALIGNED_3
+    global ALIGNED_2
 
     extern CHECK_GRID
     extern CHECK_FOR_WIN
@@ -245,9 +246,15 @@ section .text
 
         JMP END_TRY_LOOP
 
-; -------------------------- FILTERING 3 PROCESSUS --------------------------
+; -------------------------- FILTERING PROCESSUS --------------------------
 
     ALIGNED_3:
+        MOV al, 3
+        ; value to add to score is in al
+        JMP ADD_MOVE_VALUE
+        ; jump here so the RET from ADD_MOVE_VALUE leads to the next check in CHECK_FOR_WIN
+
+    ALIGNED_2:
         MOV al, 1
         ; value to add to score is in al
         JMP ADD_MOVE_VALUE

@@ -19,7 +19,7 @@ section .text
     extern actualPlayerGrid
     extern linePos
     extern rowPos
-    extern jumpTable
+    extern filters4
 
     CHECK_FOR_WIN:
         ; dh = 1 000 XXXX implies that it is a hypothetic move by the opponent
@@ -56,7 +56,7 @@ section .text
         ; preserves only the highest bit of dh
         ADD dh, al
 
-        MOV rbx, jumpTable
+        MOV rbx, filters4
 
         JMP CALL_TABLE
 
@@ -167,14 +167,14 @@ section .text
         ; preserves only the highest bit of dh
         ADD dh, al
 
-        MOV rbx, jumpTable
+        MOV rbx, filters4
 
         ; inconditionally jumps to CALL_TABLE
 
-; -------------------------- FILTERING 4 PROCESSUS --------------------------
+; -------------------------- FILTERING PROCESSUS --------------------------
 
     CALL_TABLE:
-        ; calls a jumpTable (stored in rbx) with an offset
+        ; calls a filters4 (stored in rbx) with an offset
 
         ; this offset is either 5-linePos or 6-rowPos
         ; it is the first one if a horizontal line is checked
@@ -197,12 +197,8 @@ section .text
         ; removes the "real-status bit"
 
         MOV rdi, [rbx + rax*8]
-        ; loads the instruction address from jumpTable
+        ; loads the instruction address from filters4
         JMP rdi
-
-; this whole section is to be used in the jumpTable to check only
-; the combinations that are possible
-
 
     ALIGNED_4:
         TEST dh, 0b10000000
