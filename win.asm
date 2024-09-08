@@ -6,19 +6,11 @@ section .rodata
     endmsg DB 'End of the game', 0xA, 0xD, 0xA, 0xD
     lenendmsg EQU $ - endmsg
 
-section .data
-    jumpTable:
-        dq FILTER4_0
-        dq FILTER4_1
-        dq FILTER4_2
-        dq FILTER4_3
-        dq FILTER4_4
-        dq FILTER4_5
-        dq FILTER4_6
-
 section .text
 
     global CHECK_FOR_WIN
+    global ALIGNED_4
+    global CALL_TABLE
 
     extern ADD_MOVE_VALUE
     extern END_GAME
@@ -27,7 +19,7 @@ section .text
     extern actualPlayerGrid
     extern linePos
     extern rowPos
-    extern jumpTablePoints
+    extern jumpTable
 
     CHECK_FOR_WIN:
         ; dh = 1 000 XXXX implies that it is a hypothetic move by the opponent
@@ -211,67 +203,6 @@ section .text
 ; this whole section is to be used in the jumpTable to check only
 ; the combinations that are possible
 
-    FILTER4_4:        
-        MOV al, dl
-        AND al, 0b0011110
-        CMP al, 0b0011110
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER4_5:          
-        MOV al, dl
-        AND al, 0b0111100
-        CMP al, 0b0111100
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER4_6:        
-        MOV al, dl
-        AND al, 0b1111000
-        CMP al, 0b1111000
-        CALL ANALYSE_FILTER_OUTPUT
-        
-        ; if it is not a real move
-        TEST dh, 0b10000000
-        JNZ CHECK_FOR_3
-
-        RET
-        ; returns to the next check in CHECK_FOR_WIN
-
-    FILTER4_3:          
-        MOV al, dl
-        AND al, 0b1111000
-        CMP al, 0b1111000
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER4_2:          
-        MOV al, dl
-        AND al, 0b0111100
-        CMP al, 0b0111100
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER4_1:          
-        MOV al, dl
-        AND al, 0b0011110
-        CMP al, 0b0011110
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER4_0:        
-        MOV al, dl
-        AND al, 0b0001111
-        CMP al, 0b0001111
-        CALL ANALYSE_FILTER_OUTPUT
-
-        ; if it is not a real move
-        TEST dh, 0b10000000
-        JNZ CHECK_FOR_3
-
-        RET
-        ; returns to the next check in CHECK_FOR_WIN
-
-    ANALYSE_FILTER_OUTPUT:
-        JZ ALIGNED_4
-        ; if 4 pawns are aligned
-        RET
-        ; returns to a FILTER_4
 
     ALIGNED_4:
         TEST dh, 0b10000000
@@ -282,13 +213,7 @@ section .text
         ; value to add to score is in al
 
         JMP ADD_MOVE_VALUE
-        ; jump here so the RET from ADD_MOVE_VALUE leads to the FILTER4
-
-    CHECK_FOR_3:
-        MOV rbx, jumpTablePoints
-        JMP CALL_TABLE
-        ; (informatively, the last stack element heads to one of the FILTER4)
-        ; so each of the FILTER3 must lead to a RET
+        ; jump here so the RET from ADD_MOVE_VALUE leads to the next check in CHECK_FOR_WIN
 
     WIN:
         PRNT endmsg, lenendmsg

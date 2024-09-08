@@ -12,20 +12,11 @@ section .data
     ; list of 7 bytes in wich the value of each column will be stored (3rd element
     ; of the list corresponding to the value of playing the 3rd column)
 
-    jumpTablePoints:
-        dq FILTER3_0
-        dq FILTER3_1
-        dq FILTER3_2
-        dq FILTER3_3
-        dq FILTER3_4
-        dq FILTER3_5
-        dq FILTER3_6
-
 section .text
 
-    global jumpTablePoints
     global ADD_MOVE_VALUE
     global OPPONENTS_TURN
+    global ALIGNED_3
 
     extern CHECK_GRID
     extern CHECK_FOR_WIN
@@ -256,75 +247,8 @@ section .text
 
 ; -------------------------- FILTERING 3 PROCESSUS --------------------------
 
-    FILTER3_4:        
-        MOV al, dl
-        AND al, 0b0011100
-        CMP al, 0b0011100
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER3_5:        
-        MOV al, dl
-        AND al, 0b0111000
-        CMP al, 0b0111000
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER3_6:        
-        MOV al, dl
-        AND al, 0b1110000
-        CMP al, 0b1110000
-        CALL ANALYSE_FILTER_OUTPUT
-
-        RET
-        ; returns to the next check in CHECK_FOR_WIN
-
-    FILTER3_3:        
-        MOV al, dl
-        AND al, 0b0111000
-        CMP al, 0b0111000
-        CALL ANALYSE_FILTER_OUTPUT
-        
-        MOV al, dl
-        AND al, 0b0011100
-        CMP al, 0b0011100
-        CALL ANALYSE_FILTER_OUTPUT
-        
-        MOV al, dl
-        AND al, 0b0001110
-        CMP al, 0b0001110
-        CALL ANALYSE_FILTER_OUTPUT
-
-        RET
-        ; returns to the next check in CHECK_FOR_WIN
-
-    FILTER3_2:        
-        MOV al, dl
-        AND al, 0b0011100
-        CMP al, 0b0011100
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER3_1:        
-        MOV al, dl
-        AND al, 0b0001110
-        CMP al, 0b0001110
-        CALL ANALYSE_FILTER_OUTPUT
-
-    FILTER3_0:        
-        MOV al, dl
-        AND al, 0b0000111
-        CMP al, 0b0000111
-        CALL ANALYSE_FILTER_OUTPUT
-
-        RET
-        ; returns to the next check in CHECK_FOR_WIN
-
-    ANALYSE_FILTER_OUTPUT:
-        JZ ALIGNED_3
-        ; if 3 pawns are aligned
-        RET
-        ; returns to a FILTER3
-
     ALIGNED_3:
         MOV al, 1
         ; value to add to score is in al
         JMP ADD_MOVE_VALUE
-        ; jump here so the RET from ADD_MOVE_VALUE leads to the FILTER3
+        ; jump here so the RET from ADD_MOVE_VALUE leads to the next check in CHECK_FOR_WIN
