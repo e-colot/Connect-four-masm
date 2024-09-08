@@ -109,7 +109,7 @@ section .text
         ; rcx has to be set to 0 (iteration counter)
         ; note that it is rcx NOT cl to "or" it with a 64 bit register
 
-        MOV al, BYTE [esi]
+        MOV al, BYTE [esi + ecx]
         CMP al, bl
         JNZ NEXT_EQUAL
 
@@ -119,7 +119,6 @@ section .text
         INC r9
 
     NEXT_EQUAL:
-        INC esi
         INC cl
         ; checks if the whole list has been processed
         CMP cl, 7
