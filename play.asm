@@ -52,6 +52,8 @@ section .text
     extern gridB
     extern actualPlayerGrid
 
+; -------------------------- MOVE VERIFICATION PROCESSUS --------------------------
+
     CHECK_GRID:
         ; called with rowPos in cl and linePos in edx
         ; please note that rowPos is never set to cl so put
@@ -149,6 +151,8 @@ section .text
         CMP esi, gridA
         JZ LAUNCH_B_TURN
         ; call LAUNCH_A_TURN if not equal
+
+; -------------------------- LAUNCHING TURNS PROCESSUS --------------------------
 
     LAUNCH_A_TURN:
         MOV esi, gridA

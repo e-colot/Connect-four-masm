@@ -38,8 +38,10 @@ section .text
         CALL SLANT2_WIN
 
         RET
-        ; exit the "check for win processus"
+        ; exit win.asm
         ; (NEXT_ROUND or EVALUATE_MOVE_SCORE)
+
+; -------------------------- CREATE LINES PROCESSUS --------------------------
 
     H_WIN:                                   
     ; checks for - win
@@ -176,6 +178,8 @@ section .text
         MOV rbx, jumpTable
 
         ; inconditionally jumps to CALL_TABLE
+
+; -------------------------- FILTERING 4 PROCESSUS --------------------------
 
     CALL_TABLE:
         ; calls a jumpTable (stored in rbx) with an offset

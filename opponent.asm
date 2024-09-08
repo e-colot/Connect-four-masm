@@ -53,6 +53,8 @@ section .text
         ; bl stores the best value = -128 by default
         ; (worst value to avoid playing it)
 
+; -------------------------- FIND BEST MOVE PROCESSUS --------------------------
+
     FIND_BEST:
         MOV al, BYTE [esi + edx]
         CMP al, bl
@@ -164,6 +166,8 @@ section .text
         RET
         ; returns to NEXT_VERIFICATION
 
+; -------------------------- COPY PROCESSUS --------------------------
+
     COPY_GRIDS:
         ; copies esi in edi
         ; (for 6 bytes list)
@@ -186,6 +190,8 @@ section .text
         
         RET
         ; exit the "copy list processus" 
+
+; -------------------------- TRY MOVES PROCESSUS --------------------------
 
     TRY_MOVES:
         ; loop to try to play every move
@@ -247,6 +253,8 @@ section .text
         CALL CHECK_FOR_WIN
 
         JMP END_TRY_LOOP
+
+; -------------------------- FILTERING 3 PROCESSUS --------------------------
 
     FILTER3_4:        
         MOV al, dl
