@@ -24,6 +24,7 @@ section .text
         ; this label could be deleted but it helps comprehension
         PRNT toLine, 1
         RET
+        ; returns to NEXT_LINE
 
     APAWN:
         PRNT aPawn, 1
@@ -35,7 +36,7 @@ section .text
 
     NOPAWN:
         PRNT noPawn, 1
-        JMP SPACE
+        ; inconditionally going to SPACE
 
     SPACE:
         PRNT spaces, 2
@@ -63,6 +64,7 @@ section .text
         CALL TOLINE
         ; adds a line after showing the grid
         RET
+        ; returns outside of showGrid.asm 
 
     SHOW_GRID:
         MOV BYTE [lineIndex], 0

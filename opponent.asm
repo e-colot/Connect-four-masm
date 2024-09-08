@@ -101,7 +101,7 @@ section .text
         ; and puts its value in rowPos
         MOV [rowPos], cl
 
-        ; return to win.asm
+        ; return to play.asm
         RET
 
     FIND_EQUALS:
@@ -169,7 +169,7 @@ section .text
         MOV bh, al
 
         RET
-
+        ; returns to NEXT_VERIFICATION
 
     COPY_GRIDS:
         ; copies esi in edi
@@ -178,9 +178,8 @@ section .text
         MOV al, 6
         ; iteration counter set to 6 to avoid a CMP
         ; DEC al will raise the zero flag at the end
-
-        CALL COPY_LOOP
-        RET
+        
+        ; unconditionally jumps to COPY_LOOP
 
     COPY_LOOP:
         MOV bl, [esi]
@@ -191,7 +190,9 @@ section .text
         DEC al
 
         JNZ COPY_LOOP
+        
         RET
+        ; exit the "copy list processus" 
 
     TRY_MOVES:
         ; loop to try to play every move
@@ -234,6 +235,7 @@ section .text
         JNS TRY_LOOP
     
         RET
+        ; returns to OPPONENTS_TURN
 
     ADD_MOVE_VALUE:
         ; adds the value in al to the moveValue list at rowPos position
@@ -247,6 +249,8 @@ section .text
         MOV [edi], bl
 
         RET
+        ; exit the "add value processus"
+        ; (to ALIGNED4 or )
 
     EVALUATE_MOVE_SCORE:
 
@@ -276,6 +280,7 @@ section .text
         CALL ANALYSE_FILTER_OUTPUT
 
         RET
+        ; returns to the next check in CHECK_FOR_WIN
 
     FILTER3_3:        
         MOV al, dl
@@ -294,6 +299,7 @@ section .text
         CALL ANALYSE_FILTER_OUTPUT
 
         RET
+        ; returns to the next check in CHECK_FOR_WIN
 
     FILTER3_2:        
         MOV al, dl
@@ -314,14 +320,16 @@ section .text
         CALL ANALYSE_FILTER_OUTPUT
 
         RET
+        ; returns to the next check in CHECK_FOR_WIN
 
     ANALYSE_FILTER_OUTPUT:
         JZ ALIGNED_3
         ; if 3 pawns are aligned
         RET
+        ; returns to a FILTER3
 
     ALIGNED_3:
         MOV al, 1
         ; value to add to score is in al
         JMP ADD_MOVE_VALUE
-        ; jump here so the RET from ADD_MOVE_VALUE heads to the FILTER3
+        ; jump here so the RET from ADD_MOVE_VALUE leads to the FILTER3

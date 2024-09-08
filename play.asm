@@ -92,6 +92,9 @@ section .text
         INC al
 
         RET
+        ; returns outside of the "check grid processus"
+        ; (LAUNCH_A_TURN, LAUNCH_B_TURN or TRY_LOOP)
+        ; in the case of a full column
 
     ADD_TO_GRID:
         MOV esi, [actualPlayerGrid]
@@ -123,6 +126,9 @@ section .text
 
         ; end of the "check grid process"
         RET
+        ; returns outside of the "check grid processus"
+        ; (LAUNCH_A_TURN, LAUNCH_B_TURN or TRY_LOOP)
+        ; in the case of a non full column
 
     NEXT_ROUND:
         CALL SHOW_GRID

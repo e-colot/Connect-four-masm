@@ -36,7 +36,10 @@ section .text
         CALL V_WIN
         CALL SLANT1_WIN
         CALL SLANT2_WIN
+
         RET
+        ; exit the "check for win processus"
+        ; (NEXT_ROUND or EVALUATE_MOVE_SCORE)
 
     H_WIN:                                   
     ; checks for - win
@@ -61,7 +64,7 @@ section .text
 
         MOV rbx, jumpTable
 
-        CALL CALL_TABLE
+        JMP CALL_TABLE
 
     V_WIN:                                   
     ; checks for | win
@@ -81,7 +84,35 @@ section .text
         XOR ch, ch
         ; ch is used to move cl between each line (0 for a vertical line)
 
-        ; inconditionally go to CREATE_LINE
+        JMP CREATE_LINE
+
+    SLANT1_WIN:                              
+    ; checks for / win
+        MOV cl, 6
+        SUB cl, [linePos]
+        SUB cl, [rowPos]
+        ; cl contains the column-shift (might be < 0) corresponding to the highest row
+        ; of the diagonal that has to be checked
+
+        MOV ch, 1
+        ; ch is used to move cl between each line (1 because it goes to the bottom left)
+        ; could be confusing to be > 0 to go left but it is reversed (column-shift)
+
+        JMP CREATE_LINE
+
+    SLANT2_WIN:                              
+    ; checks for \ win
+        MOV cl, 6
+        SUB cl, [linePos]
+        ADD cl, [rowPos]
+        ; cl contains the column-shift (might be > 6) corresponding to the highest row
+        ; of the diagonal that has to be checked
+
+        MOV ch, -1
+        ; ch is used to move cl between each line (-1 because it goes to the bottom right)
+        ; could be confusing to be < 0 to go right but it is reversed (column-shift)
+
+        ; unconditionally jump to CREATE_LINE
 
     CREATE_LINE:
         ; creates a line with the bits in actualPlayerGrid
@@ -173,34 +204,6 @@ section .text
         ; loads the instruction address from jumpTable
         JMP rdi
 
-    SLANT1_WIN:                              
-    ; checks for / win
-        MOV cl, 6
-        SUB cl, [linePos]
-        SUB cl, [rowPos]
-        ; cl contains the column-shift (might be < 0) corresponding to the highest row
-        ; of the diagonal that has to be checked
-
-        MOV ch, 1
-        ; ch is used to move cl between each line (1 because it goes to the bottom left)
-        ; could be confusing to be > 0 to go left but it is reversed (column-shift)
-
-        JMP CREATE_LINE
-
-    SLANT2_WIN:                              
-    ; checks for \ win
-        MOV cl, 6
-        SUB cl, [linePos]
-        ADD cl, [rowPos]
-        ; cl contains the column-shift (might be > 6) corresponding to the highest row
-        ; of the diagonal that has to be checked
-
-        MOV ch, -1
-        ; ch is used to move cl between each line (-1 because it goes to the bottom right)
-        ; could be confusing to be < 0 to go right but it is reversed (column-shift)
-
-        JMP CREATE_LINE
-
 ; this whole section is to be used in the jumpTable to check only
 ; the combinations that are possible
 
@@ -227,6 +230,7 @@ section .text
         JNZ CHECK_FOR_3
 
         RET
+        ; returns to the next check in CHECK_FOR_WIN
 
     FILTER4_3:          
         MOV al, dl
@@ -257,11 +261,13 @@ section .text
         JNZ CHECK_FOR_3
 
         RET
+        ; returns to the next check in CHECK_FOR_WIN
 
     ANALYSE_FILTER_OUTPUT:
         JZ ALIGNED_4
         ; if 4 pawns are aligned
         RET
+        ; returns to a FILTER_4
 
     ALIGNED_4:
         TEST dh, 0b10000000
@@ -270,9 +276,9 @@ section .text
 
         MOV al, 10
         ; value to add to score is in al
-        CALL ADD_MOVE_VALUE
-        ; unconditionally jump to CHECK_FOR_3
-        RET
+
+        JMP ADD_MOVE_VALUE
+        ; jump here so the RET from ADD_MOVE_VALUE leads to the FILTER4
 
     CHECK_FOR_3:
         MOV rbx, jumpTablePoints
