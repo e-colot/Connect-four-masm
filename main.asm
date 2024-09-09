@@ -28,17 +28,17 @@ section .text
         PRNT startmsg, lenstartmsg
         
 ; ------------ DEBUG ----------------
-        ; MOV esi, gridA
-        ; ADD esi, 5
+        MOV esi, gridA
+        ADD esi, 5
 
-        ; MOV [esi], BYTE 0b1110100
-        ; DEC esi
+        MOV [esi], BYTE 0b0001100
+        DEC esi
 
-        ; MOV [esi], BYTE 0b0001000
-        ; DEC esi
+        MOV [esi], BYTE 0b0000100
+        DEC esi
 
-        ; MOV [esi], BYTE 0b1110000
-        ; DEC esi
+        MOV [esi], BYTE 0b0000010
+        DEC esi
 
         ; MOV [esi], BYTE 0b0
         ; DEC esi
@@ -50,14 +50,14 @@ section .text
         ; DEC esi
 
 
-        ; MOV edi, gridB
-        ; ADD edi, 5
+        MOV edi, gridB
+        ADD edi, 5
 
-        ; MOV [edi], BYTE 0b0001001
-        ; DEC edi
+        MOV [edi], BYTE 0b0000011
+        DEC edi
 
-        ; MOV [edi], BYTE 0b1110000
-        ; DEC edi
+        MOV [edi], BYTE 0b0000011
+        DEC edi
 
         ; MOV [edi], BYTE 0b0001000
         ; DEC edi

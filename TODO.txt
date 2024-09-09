@@ -1,0 +1,3 @@
+review play.asm to leave dh untouched
+
+rely more on push/pop and less on memory calls

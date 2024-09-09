@@ -214,6 +214,8 @@ section .text
         AND dh, 0b10111111
         ; dh = RTPPPxxx
 
+        ; MOV, OR, AND don't move OF
+        ; SHL moves OF only if it is SHL xx, 1 so no problem
         JNO EVALUATE_MOVE_SCORE
         ; if overflow, go to END_TRY_LOOP without evaluating the score
         ; (overflow <=> column is full => moveValue = -50 to not select it)
@@ -224,13 +226,45 @@ section .text
 
     END_TRY_LOOP:
 
+    ; try every move for the player :
+            MOV r14, -32768
+            ; r14 will store the player best move score
+            MOV BYTE [rowPos], 6
+        PLAYER_TRY_LOOP:
+            XOR r15, r15
+            ; r15 will store the player move score
+            ; preparing for the CHECK_GRID call
+            MOV cl, [rowPos]
+            MOV edx, 5
+            CALL CHECK_GRID
+
+            OR dh, 0b11000000
+            ; raising the "team bit"
+            JNO EVALUATE_MOVE_SCORE
+        END_PLAYER_TRY_LOOP:
+            ; check if this move is better
+            CALL COMPARE_PLAYER_MOVES
+            ; resetting the grid
+            MOV esi, fakeGridA
+            MOV edi, gridA
+            CALL COPY_GRIDS
+            ; trying one row lower
+            DEC BYTE [rowPos]
+            ; redo the loop while rowPos >= 0
+            JNS PLAYER_TRY_LOOP
+
+        AND dh, 0b10111111
+        ; lowering the team bit
+        MOV rax, r14
+        ; bringing in rax the best score of the plyer
+        ; so the best move for him
+        ; and then subtracting it form the score of the ai
+        NEG ax
+        CALL ADD_MOVE_VALUE
+
         ; prepare for next iteration
 
         ; resetting the grid
-        
-        MOV esi, fakeGridA
-        MOV edi, gridA
-        CALL COPY_GRIDS
         
         MOV esi, fakeGridB
         MOV edi, gridB
@@ -261,6 +295,10 @@ section .text
         ; R T PPP XXX
         ; (more info in win.asm:CALL_TABLE)
 
+        TEST dh, 0b01000000
+        JNZ PLAYER_SCORE
+        ; <=> if the team bit is raised
+
         MOV cl, dh
         SHR cl, 3
         AND ecx, 0b111
@@ -270,30 +308,43 @@ section .text
 
         MOV bx, [edi]
 
-        TEST dh, 0b01000000
-        JNZ NEGATIVE_SCORE
-        ; <=> if the team bit is raised, substract points
-
-        ; add points
         ADD bx, ax
         MOV [edi], bx
 
         RET
         ; exit the "add value processus"
 
-    NEGATIVE_SCORE:
-        ; substract points
-        SUB bx, ax
-        MOV [edi], bx
+    PLAYER_SCORE:
+        AND rax, 0xFF
+        ; just keeping ax
+        ADD r15, rax
 
         RET
         ; exit the "add value processus"
 
     EVALUATE_MOVE_SCORE:
-
         CALL CHECK_FOR_WIN
 
-        JMP END_TRY_LOOP
+        TEST dh, 0b01000000
+
+        ; if the "team bit" is down
+        JZ END_TRY_LOOP
+
+        ; else
+        JMP END_PLAYER_TRY_LOOP
+
+    COMPARE_PLAYER_MOVES:
+        CMP r14, r15
+        JNG NEW_BEST_PLAYER_MOVE
+
+        RET
+        ; returns to END_PLAYER_TRY_LOOP
+
+    NEW_BEST_PLAYER_MOVE:
+        MOV r14, r15
+
+        RET
+        ; returns to END_PLAYER_TRY_LOOP
 
 ; -------------------------- FILTERING PROCESSUS --------------------------
 
