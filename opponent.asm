@@ -198,6 +198,21 @@ section .text
         MOV cl, [rowPos]
         MOV edx, 5
         CALL CHECK_GRID
+        
+        ; dh looks like
+        ; R T PPP XXX
+        ; (more info in win.asm:CALL_TABLE)
+
+        MOV dh, cl
+        ; cl is supposed to still have rowPos
+        SHL dh, 3
+        ; dh = xxPPPxxx
+
+        OR dh, 0b10000000
+        ; dh = RxPPPxxx
+
+        AND dh, 0b10111111
+        ; dh = RTPPPxxx
 
         JNO EVALUATE_MOVE_SCORE
         ; if overflow, go to END_TRY_LOOP without evaluating the score
@@ -222,7 +237,15 @@ section .text
         CALL COPY_GRIDS
 
         ; trying one row lower
-        DEC BYTE [rowPos]
+
+        ; first getting the previous rowPos
+        MOV cl, dh
+        SHR cl, 3
+        AND cl, 0b111
+
+        ; then decreasing it and putting it back in rowPos
+        DEC cl
+        MOV BYTE [rowPos], cl
 
         ; redo the loop while rowPos >= 0
         JNS TRY_LOOP
@@ -267,20 +290,6 @@ section .text
         ; exit the "add value processus"
 
     EVALUATE_MOVE_SCORE:
-        ; dh looks like
-        ; R T PPP XXX
-        ; (more info in win.asm:CALL_TABLE)
-
-        MOV dh, cl
-        ; cl is supposed to still have rowPos
-        SHL dh, 3
-        ; dh = xxPPPxxx
-
-        OR dh, 0b10000000
-        ; dh = RxPPPxxx
-
-        AND dh, 0b10111111
-        ; dh = RTPPPxxx
 
         CALL CHECK_FOR_WIN
 
