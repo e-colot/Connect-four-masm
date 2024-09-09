@@ -202,7 +202,7 @@ section .text
         JNO EVALUATE_MOVE_SCORE
         ; if overflow, go to END_TRY_LOOP without evaluating the score
         ; (overflow <=> column is full => moveValue = -50 to not select it)
-        MOV ax, -50
+        MOV ax, -1000
         CALL ADD_MOVE_VALUE
 
         ; unconditionally jump to END_TRY_LOOP
@@ -246,7 +246,21 @@ section .text
         LEA edi, [moveValue + 2*ecx]
 
         MOV bx, [edi]
+
+        TEST dh, 0b01000000
+        JNZ NEGATIVE_SCORE
+        ; <=> if the team bit is raised, substract points
+
+        ; add points
         ADD bx, ax
+        MOV [edi], bx
+
+        RET
+        ; exit the "add value processus"
+
+    NEGATIVE_SCORE:
+        ; substract points
+        SUB bx, ax
         MOV [edi], bx
 
         RET
