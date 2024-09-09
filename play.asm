@@ -132,10 +132,15 @@ section .text
         ; (LAUNCH_A_TURN, LAUNCH_B_TURN or TRY_LOOP)
         ; in the case of a non full column
 
+; -------------------------- LAUNCHING TURNS PROCESSUS --------------------------
+
     NEXT_ROUND:
         CALL SHOW_GRID
-        XOR dh, dh
-        ; dh != 0 implies that it is a hypothetic move by the opponent
+        AND dh, 0b01111111
+        ; dh looks like
+        ; R T PPP XXX
+        ; (more info in win.asm:CALL_TABLE)
+        
         CALL CHECK_FOR_WIN
 
         ; check if its a draw (top row filled)
@@ -151,8 +156,6 @@ section .text
         CMP esi, gridA
         JZ LAUNCH_B_TURN
         ; call LAUNCH_A_TURN if not equal
-
-; -------------------------- LAUNCHING TURNS PROCESSUS --------------------------
 
     LAUNCH_A_TURN:
         MOV esi, gridA

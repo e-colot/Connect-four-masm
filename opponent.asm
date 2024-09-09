@@ -227,16 +227,24 @@ section .text
     END_TRY_LOOP:
 
     ; try every move for the player :
+            MOV esi, gridA
+            MOV [actualPlayerGrid], esi
+
             MOV r14, -32768
             ; r14 will store the player best move score
             MOV BYTE [rowPos], 6
         PLAYER_TRY_LOOP:
+            PUSH dx
+            ; keeping dh safe while calling CHECK_GRID
+            ; (dx because PUSH and POP need r16)
+
             XOR r15, r15
             ; r15 will store the player move score
             ; preparing for the CHECK_GRID call
             MOV cl, [rowPos]
             MOV edx, 5
             CALL CHECK_GRID
+            POP dx
 
             OR dh, 0b11000000
             ; raising the "team bit"
@@ -255,6 +263,9 @@ section .text
 
         AND dh, 0b10111111
         ; lowering the team bit
+        MOV esi, gridB
+        MOV [actualPlayerGrid], esi
+
         MOV rax, r14
         ; bringing in rax the best score of the plyer
         ; so the best move for him
