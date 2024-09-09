@@ -2,6 +2,7 @@
 
 section .bss
     fakeGridB RESB 6
+    fakeGridA RESB 6
     ; the inital plan was to use these fake grids to simulate hypothetical moves
     ; without loosing the real grids. However, it has been chosen to use them to store
     ; the real grids so other functions can still be called as if it was a "real" move
@@ -28,6 +29,10 @@ section .text
     extern linePos
 
     OPPONENTS_TURN:
+        
+        MOV esi, gridA
+        MOV edi, fakeGridA
+        CALL COPY_GRIDS
         
         MOV esi, gridB
         MOV edi, fakeGridB
@@ -208,6 +213,10 @@ section .text
 
         ; resetting the grid
         
+        MOV esi, fakeGridA
+        MOV edi, gridA
+        CALL COPY_GRIDS
+        
         MOV esi, fakeGridB
         MOV edi, gridB
         CALL COPY_GRIDS
@@ -223,10 +232,17 @@ section .text
 
     ADD_MOVE_VALUE:
         ; adds the value in ax to the moveValue list at rowPos position
-        ; dh has to stay untouched here (= 0 if real move)
         ; dl has to stay untouched here (stores a line)
 
-        MOVZX ecx, BYTE [rowPos]
+        ; dh looks like
+        ; R T PPP XXX
+        ; (more info in win.asm:CALL_TABLE)
+
+        MOV cl, dh
+        SHR cl, 3
+        AND ecx, 0b111
+        ; gets the index at which the score has to be stored
+
         LEA edi, [moveValue + 2*ecx]
 
         MOV bx, [edi]
@@ -237,10 +253,21 @@ section .text
         ; exit the "add value processus"
 
     EVALUATE_MOVE_SCORE:
+        ; dh looks like
+        ; R T PPP XXX
+        ; (more info in win.asm:CALL_TABLE)
 
-        MOV dh, 0b10000000
-        ; indicates that it is not a real move so the CHECK_FOR_WIN
-        ; call will be used to evaluate what the move is worth
+        MOV dh, cl
+        ; cl is supposed to still have rowPos
+        SHL dh, 3
+        ; dh = xxPPPxxx
+
+        OR dh, 0b10000000
+        ; dh = RxPPPxxx
+
+        AND dh, 0b10111111
+        ; dh = RTPPPxxx
+
         CALL CHECK_FOR_WIN
 
         JMP END_TRY_LOOP

@@ -52,8 +52,8 @@ section .text
         SUB al, bl
         ; al contains the offset (4 bits)
 
-        AND dh, 0b10000000
-        ; preserves only the highest bit of dh
+        AND dh, 0b11111000
+        ; clears the 3 lower bits of dh
         ADD dh, al
 
         MOV rbx, filters4
@@ -163,8 +163,8 @@ section .text
         SUB al, bl
         ; al contains the offset (4 bits)
 
-        AND dh, 0b10000000
-        ; preserves only the highest bit of dh
+        AND dh, 0b11111000
+        ; clears the 3 lower bits of dh
         ADD dh, al
 
         MOV rbx, filters4
@@ -185,9 +185,19 @@ section .text
         ; be on the MSB of dh and the offset on the LSB of dh
         ; the offset being between 0 and 7, it only takes 3 bits
 
+        ; also, the second bit (starting from the MSB) is raised
+        ; if the move is not real AND it is performed by the real
+        ; player (so then the score must be subtracted)
+
+        ; finally, the rowPos of the first move of the prediction 
+        ; is stored in the 3 last bits (used to know at which 
+        ; index of moveValue the score must be changed)
+
         ; so dh looks like
-        ; R 0000 XXX
+        ; R T PPP XXX
         ; with R the "real-status bit"
+        ; T the "team bit"
+        ; R the "original rowPos"
         ; and X the offset value
         
         MOVZX rax, dx

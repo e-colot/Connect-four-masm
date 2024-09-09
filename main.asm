@@ -50,10 +50,10 @@ section .text
         ; DEC esi
 
 
-        ; MOV edi, gridB
-        ; ADD edi, 5
+        MOV edi, gridB
+        ADD edi, 5
 
-        ; MOV [edi], BYTE 0b0001001
+        MOV [edi], BYTE 0b0001001
         ; DEC edi
 
         ; MOV [edi], BYTE 0b1110000
